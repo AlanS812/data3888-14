@@ -1,6 +1,5 @@
 from PIL import Image, ImageFilter
-import tensorflow as tf
-from tensorflow.keras import datasets, layers, models, optimizers
+#from tensorflow.keras import datasets, layers, models, optimizers
 import matplotlib.pyplot as plt
 from pathlib import Path
 import random
@@ -107,8 +106,8 @@ def split_data(images):
 
     random.seed(3888)
 
-    training_size = 5000
-    testing_size = 1000
+    training_size = 2500
+    testing_size = 500
     training_data = []
     testing_data = []
 
