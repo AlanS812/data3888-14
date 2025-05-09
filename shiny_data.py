@@ -87,52 +87,64 @@ def get_image_paths(base_path="data/100"):
 
     return [tumour_files, immune_files, stromal_files, other_files]
 
-def load_images():
-    tumour_files, immune_files, stromal_files, other_files = get_image_paths("data/100")
-    tumour_imgs = [Image.open(img_path).convert('RGB') for img_path in tumour_files]
+def load_resize(img_path, size=(224,224)):
+    img = Image.open(img_path).convert('RGB')
+    img = img.resize(size)
+    return np.array(img)
 
-    immune_imgs = [Image.open(img_path).convert('RGB') for img_path in immune_files]
-
-    stromal_imgs = [Image.open(img_path).convert('RGB') for img_path in stromal_files]
-
-    other_imgs = [Image.open(img_path).convert('RGB') for img_path in other_files]
-
-    return [tumour_imgs, immune_imgs, stromal_imgs, other_imgs]
-
-def split_data(images):
+def load_split_images(training_size=2500, val_size=500, testing_size=1000):
     """
     Split the data into training and testing sets
     """
-
     random.seed(3888)
 
-    training_size = 2500
-    testing_size = 500
+    total_size = training_size + val_size + testing_size
+
     training_data = []
+    val_data = []
     testing_data = []
 
+    # Load the images
+    tumour_files, immune_files, stromal_files, other_files = get_image_paths("data/100")
+    tumour_imgs = [load_resize(img_path) for img_path in tumour_files[:total_size]]
+    print("Tumour images loaded")
+    immune_imgs = [load_resize(img_path) for img_path in immune_files[:total_size]]
+    print("Immune images loaded")
+    stromal_imgs = [load_resize(img_path) for img_path in stromal_files[:total_size]]
+    print("Stromal images loaded")
+    other_imgs = [load_resize(img_path) for img_path in other_files[:total_size]]
+    print("Other images loaded")
 
-    for cell_type in images:
+    cell_groups = [tumour_imgs, immune_imgs, stromal_imgs, other_imgs]
+
+    for cell_type in cell_groups:
         random.shuffle(cell_type)
-        training_data.append(cell_type[:training_size])
-        testing_data.append(cell_type[training_size:training_size+testing_size])
+        training_data.extend(cell_type[:training_size])
+        val_data.extend(cell_type[training_size:training_size+val_size])
+        testing_data.extend(cell_type[training_size+val_size:training_size+val_size+testing_size])
+
 
     # Randomly shuffle the training and testing data
     random.shuffle(training_data)
+    random.shuffle(val_data)
     random.shuffle(testing_data)
 
-    Xmat_train = np.stack(imgs_train, axis=0)
-    Xmat_test = np.stack(imgs_test, axis=0)
+    Xmat_train = np.stack(training_data, axis=0)
+    Xmat_val = np.stack(val_data, axis=0)
+    Xmat_test = np.stack(testing_data, axis=0)
 
     y_train = ['Immune'] * training_size + ['Tumour'] * training_size + ['Stromal'] * training_size + ['Other'] * training_size
+    y_val = ['Immune'] * val_size + ['Tumour'] * val_size + ['Stromal'] * val_size + ['Other'] * val_size
     y_test = ['Immune'] * testing_size + ['Tumour'] * testing_size + ['Stromal'] * testing_size + ['Other'] * testing_size
 
 
     le = LabelEncoder()
     y_train_enc = le.fit_transform(y_train)
+    y_val_enc = le.transform(y_val)
     y_test_enc = le.transform(y_test)
 
-    return Xmat_train, Xmat_test, y_train_enc, y_test_enc
+    return Xmat_train, Xmat_val, Xmat_test, y_train_enc, y_val_enc, y_test_enc
+
 
 class NumpyImageDataset(Dataset):
     def __init__(self, images, labels, transform=None):
@@ -164,18 +176,16 @@ def resize_images(images, size):
         resized_images.append(np.array(resized_img))
     return np.array(resized_images)
 
-def transform_datasets(Xmat_train, Xmat_test, y_train_enc, y_test_enc):
+def transform_datasets(Xmat_train, Xmat_val, Xmat_test, y_train_enc, y_val_enc, y_test_enc):
     transform = transforms.Compose([
-    transforms.Resize((224, 224)),
     transforms.ToTensor(),
-    transforms.Normalize([0.485, 0.456, 0.406],
-                         [0.229, 0.224, 0.225])
-    ])
+    transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])])
 
     train_dataset = NumpyImageDataset(Xmat_train, y_train_enc, transform=transform)
+    val_dataset = NumpyImageDataset(Xmat_val, y_val_enc, transform=transform)
     test_dataset = NumpyImageDataset(Xmat_test, y_test_enc, transform=transform)
 
-    return train_dataset, test_dataset
+    return train_dataset, val_dataset, test_dataset
 
 # Augmentations
 
@@ -222,93 +232,72 @@ def adjust_contrast(images, factor=1.5):
 
 
 # Create datasets
-def get_original():
+def get_original(training_size=2500, val_size=500, testing_size=1000):
     """
     Load the original dataset
     """
-    images = load_images()
-    Xmat_train, Xmat_test, y_train_enc, y_test_enc = split_data(images)
-    Xmat_train = resize_images(Xmat_train, (224, 224))
-    Xmat_test = resize_images(Xmat_test, (224, 224))
-    train_dataset, test_dataset = transform_datasets(Xmat_train, Xmat_test, y_train_enc, y_test_enc)
-    return train_dataset, test_dataset
+    Xmat_train, Xmat_val, Xmat_test, y_train_enc, y_val_enc, y_test_enc = load_split_images(training_size, val_size, testing_size)
+    train_dataset, val_dataset, test_dataset = transform_datasets(Xmat_train, Xmat_val, Xmat_test, y_train_enc, y_val_enc, y_test_enc)
+    return train_dataset, val_dataset, test_dataset
 
-def get_blurred_5():
+def get_blurred_5(training_size=2500, val_size=500, testing_size=1000):
     """
     Load the blurred dataset
     """
-    images = load_images()
-    Xmat_train, Xmat_test, y_train_enc, y_test_enc = split_data(images)
-    blurred_train = apply_blur(Xmat_train, 5)
-    Xmat_train = resize_images(blurred_train, (224, 224))
-    Xmat_test = resize_images(Xmat_test, (224, 224))
-    train_dataset, test_dataset = transform_datasets(Xmat_train, Xmat_test, y_train_enc, y_test_enc)
-    return train_dataset, test_dataset
+    Xmat_train, Xmat_val, Xmat_test, y_train_enc, y_val_enc, y_test_enc = load_split_images(training_size, val_size, testing_size)
+    Xmat_train = apply_blur(Xmat_train, 5)
+    
+    train_dataset, val_dataset, test_dataset = transform_datasets(Xmat_train, Xmat_val, Xmat_test, y_train_enc, y_val_enc, y_test_enc)
+    return train_dataset, val_dataset, test_dataset
 
-def get_blurred_100():
+def get_blurred_100(training_size=2500, val_size=500, testing_size=1000):
     """
     Load the blurred dataset
     """
-    images = load_images()
-    Xmat_train, Xmat_test, y_train_enc, y_test_enc = split_data(images)
-    blurred_train = apply_blur(Xmat_train, 100)
-    Xmat_train = resize_images(blurred_train, (224, 224))
-    Xmat_test = resize_images(Xmat_test, (224, 224))
-    train_dataset, test_dataset = transform_datasets(Xmat_train, Xmat_test, y_train_enc, y_test_enc)
-    return train_dataset, test_dataset
+    Xmat_train, Xmat_val, Xmat_test, y_train_enc, y_val_enc, y_test_enc = load_split_images(training_size, val_size, testing_size)
+    Xmat_train = apply_blur(Xmat_train, 100)
+    
+    train_dataset, val_dataset, test_dataset = transform_datasets(Xmat_train, Xmat_val, Xmat_test, y_train_enc, y_val_enc, y_test_enc)
+    return train_dataset, val_dataset, test_dataset
 
-def get_blurred_full():
+def get_blurred_full(training_size=2500, val_size=500, testing_size=1000):
     """
     Load the blurred dataset
     """
+    Xmat_train, Xmat_val, Xmat_test, y_train_enc, y_val_enc, y_test_enc = load_split_images(training_size, val_size, testing_size)
+    Xmat_train = apply_full_image_blur(Xmat_train)
+    
+    train_dataset, val_dataset, test_dataset = transform_datasets(Xmat_train, Xmat_val, Xmat_test, y_train_enc, y_val_enc, y_test_enc)
+    return train_dataset, val_dataset, test_dataset
 
-    images = load_images()
-    Xmat_train, Xmat_test, y_train_enc, y_test_enc = split_data(images)
-    blurred_train = apply_full_image_blur(Xmat_train)
-    Xmat_train = resize_images(blurred_train, (224, 224))
-    Xmat_test = resize_images(Xmat_test, (224, 224))
-    train_dataset, test_dataset = transform_datasets(Xmat_train, Xmat_test, y_train_enc, y_test_enc)
-    return train_dataset, test_dataset
-
-def get_greyscale():
+def get_greyscale(training_size=2500, val_size=500, testing_size=1000):
     """
     Load the greyscale dataset
     """
+    Xmat_train, Xmat_val, Xmat_test, y_train_enc, y_val_enc, y_test_enc = load_split_images(training_size, val_size, testing_size)
+    Xmat_train = apply_greyscale(Xmat_train)
+    
+    train_dataset, val_dataset, test_dataset = transform_datasets(Xmat_train, Xmat_val, Xmat_test, y_train_enc, y_val_enc, y_test_enc)
+    return train_dataset, val_dataset, test_dataset
 
-    images = load_images()
-    Xmat_train, Xmat_test, y_train_enc, y_test_enc = split_data(images)
-    greyscale_train = apply_greyscale(Xmat_train)
-    Xmat_train = resize_images(greyscale_train, (224, 224))
-    Xmat_test = resize_images(Xmat_test, (224, 224))
-    train_dataset, test_dataset = transform_datasets(Xmat_train, Xmat_test, y_train_enc, y_test_enc)
-    return train_dataset, test_dataset
-
-def get_contrast_1_5():
+def get_contrast_1_5(training_size=2500, val_size=500, testing_size=1000):
     """
     Load the contrast dataset
     """
+    Xmat_train, Xmat_val, Xmat_test, y_train_enc, y_val_enc, y_test_enc = load_split_images(training_size, val_size, testing_size)
+    Xmat_train = adjust_contrast(Xmat_train, 1.5)
+    
+    train_dataset, val_dataset, test_dataset = transform_datasets(Xmat_train, Xmat_val, Xmat_test, y_train_enc, y_val_enc, y_test_enc)
+    return train_dataset, val_dataset, test_dataset
 
-    images = load_images()
-    Xmat_train, Xmat_test, y_train_enc, y_test_enc = split_data(images)
-    contrast_train = adjust_contrast(Xmat_train, 1.5)
-    Xmat_train = resize_images(contrast_train, (224, 224))
-    Xmat_test = resize_images(Xmat_test, (224, 224))
-    train_dataset, test_dataset = transform_datasets(Xmat_train, Xmat_test, y_train_enc, y_test_enc)
-    return train_dataset, test_dataset
-
-def get_contrast_0_5():
+def get_contrast_0_5(training_size=2500, val_size=500, testing_size=1000):
     """
     Load the contrast dataset
     """
+    Xmat_train, Xmat_val, Xmat_test, y_train_enc, y_val_enc, y_test_enc = load_split_images(training_size, val_size, testing_size)
+    Xmat_train = adjust_contrast(Xmat_train, 0.5)
+    
+    train_dataset, val_dataset, test_dataset = transform_datasets(Xmat_train, Xmat_val, Xmat_test, y_train_enc, y_val_enc, y_test_enc)
+    return train_dataset, val_dataset, test_dataset
 
-    images = load_images()
-    Xmat_train, Xmat_test, y_train_enc, y_test_enc = split_data(images)
-    contrast_train = adjust_contrast(Xmat_train, 0.5)
-    Xmat_train = resize_images(contrast_train, (224, 224))
-    Xmat_test = resize_images(Xmat_test, (224, 224))
-    train_dataset, test_dataset = transform_datasets(Xmat_train, Xmat_test, y_train_enc, y_test_enc)
-    return train_dataset, test_dataset
-
-
-# should we first augment then resize?
 
