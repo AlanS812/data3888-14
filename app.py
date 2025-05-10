@@ -8,6 +8,8 @@ from sklearn.datasets import load_iris
 import numpy as np
 import matplotlib.pyplot as plt
 
+import shiny_data
+
 # load Dataset - here its Iris
 iris_bunch = load_iris(as_frame=True)
 iris_df    = iris_bunch.frame
