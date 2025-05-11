@@ -50,3 +50,9 @@ rsconnect/
 
 # Mac issue
 .DS_Store
+
+.venv
+*.joblib
+archive
+data
+__pycache__
