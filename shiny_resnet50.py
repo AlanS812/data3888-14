@@ -31,7 +31,7 @@ def train_resnet50(train_dataset, val_dataset, batch_size=128, num_epochs=10, au
     #tf.keras.backend.clear_session()
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    model = models.resnet50(pretrained=False)
+    model = models.resnet50(pretrained=True)
 
     # Freeze feature extractor
     for param in model.parameters():
