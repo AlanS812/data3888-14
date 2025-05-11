@@ -189,6 +189,13 @@ def main():
     print(f"Original Precision: {og_precision:.2f}")
     print(f"Original Recall: {og_recall:.2f}")
 
+    with open('resnet50_metrics.txt', 'a') as f:
+        f.write(f"og Accuracy: {og_accuracy:.2f}%\n")
+        f.write(f"og F1 Score: {og_f1:.2f}\n")
+        f.write(f"og Precision: {og_precision:.2f}\n")
+        f.write(f"og Recall: {og_recall:.2f}\n")
+        f.write("\n")
+
     # Blur 50 augmented data
     train_dataset, val_dataset, test_dataset = shiny_data.get_blurred_50()
     blur50_losses, blur50_accuracies = train_resnet50(train_dataset, val_dataset, batch_size, num_epochs, augmentation="blur50")
@@ -200,6 +207,13 @@ def main():
     print(f"Blur 50 F1 Score: {blur50_f1:.2f}")
     print(f"Blur 50 Precision: {blur50_precision:.2f}")
     print(f"Blur 50 Recall: {blur50_recall:.2f}")
+
+    with open('resnet50_metrics.txt', 'a') as f:
+        f.write(f"blur50 Accuracy: {blur50_accuracy:.2f}%\n")
+        f.write(f"blur50 F1 Score: {blur50_f1:.2f}\n")
+        f.write(f"blur50 Precision: {blur50_precision:.2f}\n")
+        f.write(f"blur50 Recall: {blur50_recall:.2f}\n")
+        f.write("\n")
     '''
     # Blur 100 augmented data
     train_dataset, val_dataset, test_dataset = shiny_data.get_blurred_100()
