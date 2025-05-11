@@ -124,7 +124,7 @@ def load_split_images(training_size=2500, val_size=500, testing_size=1000):
         testing_data.extend(cell_type[training_size+val_size:training_size+val_size+testing_size])
 
 
-    # Randomly shuffle the training and testing data
+    # Randomly shuffle the data groups
     random.shuffle(training_data)
     random.shuffle(val_data)
     random.shuffle(testing_data)

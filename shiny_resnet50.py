@@ -22,7 +22,7 @@ import shiny_data
 
 # Train model
 
-def train_resnet50(train_dataset, val_dataset, batch_size=128, num_epochs=10):
+def train_resnet50(train_dataset, val_dataset, batch_size=128, num_epochs=10, augmentation="original"):
     # Create data loaders
     train_loader = DataLoader(train_dataset, batch_size, shuffle=True, num_workers=0)
     val_loader = DataLoader(val_dataset, batch_size)
@@ -31,7 +31,7 @@ def train_resnet50(train_dataset, val_dataset, batch_size=128, num_epochs=10):
     #tf.keras.backend.clear_session()
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    model = models.resnet50(pretrained=True)
+    model = models.resnet50(pretrained=False)
 
     # Freeze feature extractor
     for param in model.parameters():
@@ -41,6 +41,7 @@ def train_resnet50(train_dataset, val_dataset, batch_size=128, num_epochs=10):
     num_ftrs = model.fc.in_features
     model.fc = nn.Linear(num_ftrs, 4)
 
+
     model = model.to(device)
 
     criterion = nn.CrossEntropyLoss()
@@ -49,7 +50,7 @@ def train_resnet50(train_dataset, val_dataset, batch_size=128, num_epochs=10):
     losses = []
     accuracies = []
 
-    patience = 3  # number of epochs to wait for improvement
+    patience = 5  # number of epochs to wait for improvement
     best_val_loss = float('inf')
     epochs_no_improve = 0
     early_stop = False
@@ -99,7 +100,7 @@ def train_resnet50(train_dataset, val_dataset, batch_size=128, num_epochs=10):
         # Check for improvement
         if val_loss < best_val_loss:
             best_val_loss = val_loss
-            torch.save(model.state_dict(), 'best_model.pt')  # save the best model
+            torch.save(model.state_dict(), f'resnet50_models/{augmentation}_model.pt')  # save the best model
             epochs_no_improve = 0
         else:
             epochs_no_improve += 1
@@ -116,7 +117,7 @@ def train_resnet50(train_dataset, val_dataset, batch_size=128, num_epochs=10):
 
 
 # Function to evaluate model
-def eval_resnet50(test_dataset, batch_size=128):
+def eval_resnet50(test_dataset, batch_size=128, augmentation="original"):
     test_loader = DataLoader(test_dataset, batch_size)
 
     model = models.resnet50(pretrained=False)
@@ -128,7 +129,7 @@ def eval_resnet50(test_dataset, batch_size=128):
     num_ftrs = model.fc.in_features
     model.fc = nn.Linear(num_ftrs, 4)
 
-    model.load_state_dict(torch.load('best_model.pt', map_location=device))
+    model.load_state_dict(torch.load(f'resnet50_models/{augmentation}_model.pt', map_location=device))
     model = model.to(device)
 
     model.eval()  # Set the model to evaluation mode
@@ -172,17 +173,82 @@ def graph_loss_accuracy(losses, accuracies, num_epochs):
     plt.grid(True)
     plt.show()
 
-# Main run sequence
-num_epochs = 10
-batch_size = 128
 
-train_dataset, val_dataset, test_dataset = shiny_data.get_original()
-og_losses, og_accuracies = train_resnet50(train_dataset, val_dataset, batch_size, num_epochs)
-og_accuracy, og_f1, og_precision, og_recall = eval_resnet50(test_dataset, batch_size)
+def main():
+    # Original data
+    num_epochs = 20
+    batch_size = 128
 
-graph_loss_accuracy(og_losses, og_accuracies, num_epochs)
+    train_dataset, val_dataset, test_dataset = shiny_data.get_original()
+    og_losses, og_accuracies = train_resnet50(train_dataset, val_dataset, batch_size, num_epochs, augmentation="original")
+    og_accuracy, og_f1, og_precision, og_recall = eval_resnet50(test_dataset, batch_size, augmentation="original")
 
-print(f"Original Accuracy: {og_accuracy:.2f}%")
-print(f"Original F1 Score: {og_f1:.2f}")
-print(f"Original Precision: {og_precision:.2f}")
-print(f"Original Recall: {og_recall:.2f}")
+    graph_loss_accuracy(og_losses, og_accuracies, num_epochs)
+
+    print(f"Original Accuracy: {og_accuracy:.2f}%")
+    print(f"Original F1 Score: {og_f1:.2f}")
+    print(f"Original Precision: {og_precision:.2f}")
+    print(f"Original Recall: {og_recall:.2f}")
+
+    # Blur 50 augmented data
+    train_dataset, val_dataset, test_dataset = shiny_data.get_blurred_50()
+    blur50_losses, blur50_accuracies = train_resnet50(train_dataset, val_dataset, batch_size, num_epochs, augmentation="blur50")
+    blur50_accuracy, blur50_f1, blur50_precision, blur50_recall = eval_resnet50(test_dataset, batch_size, augmentation="blur50")
+
+    graph_loss_accuracy(blur50_losses, blur50_accuracies, num_epochs)
+
+    print(f"Blur 50 Accuracy: {blur50_accuracy:.2f}%")
+    print(f"Blur 50 F1 Score: {blur50_f1:.2f}")
+    print(f"Blur 50 Precision: {blur50_precision:.2f}")
+    print(f"Blur 50 Recall: {blur50_recall:.2f}")
+
+    # Blur 100 augmented data
+    train_dataset, val_dataset, test_dataset = shiny_data.get_blurred_100()
+    blur100_losses, blur100_accuracies = train_resnet50(train_dataset, val_dataset, batch_size, num_epochs, augmentation="blur100")
+    blur100_accuracy, blur100_f1, blur100_precision, blur100_recall = eval_resnet50(test_dataset, batch_size, augmentation="blur100")
+
+    graph_loss_accuracy(blur100_losses, blur100_accuracies, num_epochs)
+
+    print(f"blur100 Accuracy: {blur100_accuracy:.2f}%")
+    print(f"blur100 F1 Score: {blur100_f1:.2f}")
+    print(f"blur100 Precision: {blur100_precision:.2f}")
+    print(f"blur100 Recall: {blur100_recall:.2f}")
+
+    # Blur 150 augmented data
+    train_dataset, val_dataset, test_dataset = shiny_data.get_blurred_150()
+    blur150_losses, blur150_accuracies = train_resnet50(train_dataset, val_dataset, batch_size, num_epochs, augmentation="blur50")
+    blur150_accuracy, blur150_f1, blur150_precision, blur150_recall = eval_resnet50(test_dataset, batch_size, augmentation="blur50")
+
+    graph_loss_accuracy(blur150_losses, blur150_accuracies, num_epochs)
+
+    print(f"blur150 Accuracy: {blur150_accuracy:.2f}%")
+    print(f"blur150 F1 Score: {blur150_f1:.2f}")
+    print(f"blur150 Precision: {blur150_precision:.2f}")
+    print(f"blur150 Recall: {blur150_recall:.2f}")
+
+    # Blur 200 augmented data
+    train_dataset, val_dataset, test_dataset = shiny_data.get_blurred_200()
+    blur200_losses, blur200_accuracies = train_resnet50(train_dataset, val_dataset, batch_size, num_epochs, augmentation="blur50")
+    blur200_accuracy, blur200_f1, blur200_precision, blur200_recall = eval_resnet50(test_dataset, batch_size, augmentation="blur50")
+
+    graph_loss_accuracy(blur200_losses, blur200_accuracies, num_epochs)
+
+    print(f"blur200 Accuracy: {blur200_accuracy:.2f}%")
+    print(f"blur200 F1 Score: {blur200_f1:.2f}")
+    print(f"blur200 Precision: {blur200_precision:.2f}")
+    print(f"blur200 Recall: {blur200_recall:.2f}")
+
+    # Blur full augmented data
+    train_dataset, val_dataset, test_dataset = shiny_data.get_blurred_full()
+    blurfull_losses, blurfull_accuracies = train_resnet50(train_dataset, val_dataset, batch_size, num_epochs, augmentation="blur50")
+    blurfull_accuracy, blurfull_f1, blurfull_precision, blurfull_recall = eval_resnet50(test_dataset, batch_size, augmentation="blur50")
+
+    graph_loss_accuracy(blurfull_losses, blurfull_accuracies, num_epochs)
+
+    print(f"blur full Accuracy: {blurfull_accuracy:.2f}%")
+    print(f"blur full F1 Score: {blurfull_f1:.2f}")
+    print(f"blur full Precision: {blurfull_precision:.2f}")
+    print(f"blur full Recall: {blurfull_recall:.2f}")
+
+if __name__ == "__main__":
+    main()
