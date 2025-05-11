@@ -240,12 +240,12 @@ def get_original(training_size=2500, val_size=500, testing_size=1000):
     train_dataset, val_dataset, test_dataset = transform_datasets(Xmat_train, Xmat_val, Xmat_test, y_train_enc, y_val_enc, y_test_enc)
     return train_dataset, val_dataset, test_dataset
 
-def get_blurred_5(training_size=2500, val_size=500, testing_size=1000):
+def get_blurred_50(training_size=2500, val_size=500, testing_size=1000):
     """
     Load the blurred dataset
     """
     Xmat_train, Xmat_val, Xmat_test, y_train_enc, y_val_enc, y_test_enc = load_split_images(training_size, val_size, testing_size)
-    Xmat_train = apply_blur(Xmat_train, 5)
+    Xmat_train = apply_blur(Xmat_train, 50)
     
     train_dataset, val_dataset, test_dataset = transform_datasets(Xmat_train, Xmat_val, Xmat_test, y_train_enc, y_val_enc, y_test_enc)
     return train_dataset, val_dataset, test_dataset
@@ -256,6 +256,26 @@ def get_blurred_100(training_size=2500, val_size=500, testing_size=1000):
     """
     Xmat_train, Xmat_val, Xmat_test, y_train_enc, y_val_enc, y_test_enc = load_split_images(training_size, val_size, testing_size)
     Xmat_train = apply_blur(Xmat_train, 100)
+    
+    train_dataset, val_dataset, test_dataset = transform_datasets(Xmat_train, Xmat_val, Xmat_test, y_train_enc, y_val_enc, y_test_enc)
+    return train_dataset, val_dataset, test_dataset
+
+def get_blurred_150(training_size=2500, val_size=500, testing_size=1000):
+    """
+    Load the blurred dataset
+    """
+    Xmat_train, Xmat_val, Xmat_test, y_train_enc, y_val_enc, y_test_enc = load_split_images(training_size, val_size, testing_size)
+    Xmat_train = apply_blur(Xmat_train, 150)
+    
+    train_dataset, val_dataset, test_dataset = transform_datasets(Xmat_train, Xmat_val, Xmat_test, y_train_enc, y_val_enc, y_test_enc)
+    return train_dataset, val_dataset, test_dataset
+
+def get_blurred_200(training_size=2500, val_size=500, testing_size=1000):
+    """
+    Load the blurred dataset
+    """
+    Xmat_train, Xmat_val, Xmat_test, y_train_enc, y_val_enc, y_test_enc = load_split_images(training_size, val_size, testing_size)
+    Xmat_train = apply_blur(Xmat_train, 200)
     
     train_dataset, val_dataset, test_dataset = transform_datasets(Xmat_train, Xmat_val, Xmat_test, y_train_enc, y_val_enc, y_test_enc)
     return train_dataset, val_dataset, test_dataset
