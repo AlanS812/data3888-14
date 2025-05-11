@@ -92,11 +92,28 @@ def load_resize(img_path, size=(224,224)):
     img = img.resize(size)
     return np.array(img)
 
+def label_and_split(images, label):
+    random.shuffle(images)
+    return (
+        list(zip(images[:training_size], [label]*training_size)),
+        list(zip(images[training_size:training_size+val_size], [label]*val_size)),
+        list(zip(images[training_size+val_size:training_size+val_size+testing_size], [label]*testing_size)),
+    )
+
+def label_and_split(images, label, training_size=2500, val_size=500, testing_size=1000):
+    random.shuffle(images)
+    return (
+        list(zip(images[:training_size], [label]*training_size)),
+        list(zip(images[training_size:training_size+val_size], [label]*val_size)),
+        list(zip(images[training_size+val_size:training_size+val_size+testing_size], [label]*testing_size)),
+    )
+
 def load_split_images(training_size=2500, val_size=500, testing_size=1000):
     """
     Split the data into training and testing sets
     """
     random.seed(3888)
+    np.random.seed(3888)
 
     total_size = training_size + val_size + testing_size
 
@@ -115,29 +132,31 @@ def load_split_images(training_size=2500, val_size=500, testing_size=1000):
     other_imgs = [load_resize(img_path) for img_path in other_files[:total_size]]
     print("Other images loaded")
 
-    cell_groups = [tumour_imgs, immune_imgs, stromal_imgs, other_imgs]
 
-    for cell_type in cell_groups:
-        random.shuffle(cell_type)
-        training_data.extend(cell_type[:training_size])
-        val_data.extend(cell_type[training_size:training_size+val_size])
-        testing_data.extend(cell_type[training_size+val_size:training_size+val_size+testing_size])
+    t_train, t_val, t_test = label_and_split(tumour_imgs, 'Tumour')
+    i_train, i_val, i_test = label_and_split(immune_imgs, 'Immune')
+    s_train, s_val, s_test = label_and_split(stromal_imgs, 'Stromal')
+    o_train, o_val, o_test = label_and_split(other_imgs, 'Other')
 
+    # Combine and shuffle
+    training_data = t_train + i_train + s_train + o_train
+    val_data = t_val + i_val + s_val + o_val
+    testing_data = t_test + i_test + s_test + o_test
 
-    # Randomly shuffle the data groups
     random.shuffle(training_data)
     random.shuffle(val_data)
     random.shuffle(testing_data)
 
-    Xmat_train = np.stack(training_data, axis=0)
-    Xmat_val = np.stack(val_data, axis=0)
-    Xmat_test = np.stack(testing_data, axis=0)
+    # Unzip into X and y
+    Xmat_train, y_train = zip(*training_data)
+    Xmat_val, y_val = zip(*val_data)
+    Xmat_test, y_test = zip(*testing_data)
 
-    y_train = ['Immune'] * training_size + ['Tumour'] * training_size + ['Stromal'] * training_size + ['Other'] * training_size
-    y_val = ['Immune'] * val_size + ['Tumour'] * val_size + ['Stromal'] * val_size + ['Other'] * val_size
-    y_test = ['Immune'] * testing_size + ['Tumour'] * testing_size + ['Stromal'] * testing_size + ['Other'] * testing_size
+    Xmat_train = np.stack(Xmat_train)
+    Xmat_val = np.stack(Xmat_val)
+    Xmat_test = np.stack(Xmat_test)
 
-
+    # Encode labels
     le = LabelEncoder()
     y_train_enc = le.fit_transform(y_train)
     y_val_enc = le.transform(y_val)

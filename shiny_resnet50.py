@@ -177,7 +177,7 @@ def main():
     # Original data
     num_epochs = 20
     batch_size = 64
-
+    '''
     train_dataset, val_dataset, test_dataset = shiny_data.get_original()
     og_losses, og_accuracies = train_resnet50(train_dataset, val_dataset, batch_size, num_epochs, augmentation="original")
     og_accuracy, og_f1, og_precision, og_recall = eval_resnet50(test_dataset, batch_size, augmentation="original")
@@ -195,13 +195,13 @@ def main():
         f.write(f"og Precision: {og_precision:.2f}\n")
         f.write(f"og Recall: {og_recall:.2f}\n")
         f.write("\n")
-
+    '''
     # Blur 50 augmented data
     train_dataset, val_dataset, test_dataset = shiny_data.get_blurred_50()
     blur50_losses, blur50_accuracies = train_resnet50(train_dataset, val_dataset, batch_size, num_epochs, augmentation="blur50")
     blur50_accuracy, blur50_f1, blur50_precision, blur50_recall = eval_resnet50(test_dataset, batch_size, augmentation="blur50")
 
-    graph_loss_accuracy(blur50_losses, blur50_accuracies, num_epochs)
+    #graph_loss_accuracy(blur50_losses, blur50_accuracies, num_epochs)
 
     print(f"Blur 50 Accuracy: {blur50_accuracy:.2f}%")
     print(f"Blur 50 F1 Score: {blur50_f1:.2f}")
