@@ -20,7 +20,7 @@ import cv2
 import shiny_data
 import shiny_resnet50
 
-batch_size = 128
+batch_size = 64
 num_epochs = 20
 
 # Blur 100 augmented data

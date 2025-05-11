@@ -41,7 +41,6 @@ def train_resnet50(train_dataset, val_dataset, batch_size=128, num_epochs=10, au
     num_ftrs = model.fc.in_features
     model.fc = nn.Linear(num_ftrs, 4)
 
-
     model = model.to(device)
 
     criterion = nn.CrossEntropyLoss()
@@ -177,7 +176,7 @@ def graph_loss_accuracy(losses, accuracies, num_epochs):
 def main():
     # Original data
     num_epochs = 20
-    batch_size = 128
+    batch_size = 64
 
     train_dataset, val_dataset, test_dataset = shiny_data.get_original()
     og_losses, og_accuracies = train_resnet50(train_dataset, val_dataset, batch_size, num_epochs, augmentation="original")
@@ -201,7 +200,7 @@ def main():
     print(f"Blur 50 F1 Score: {blur50_f1:.2f}")
     print(f"Blur 50 Precision: {blur50_precision:.2f}")
     print(f"Blur 50 Recall: {blur50_recall:.2f}")
-
+    '''
     # Blur 100 augmented data
     train_dataset, val_dataset, test_dataset = shiny_data.get_blurred_100()
     blur100_losses, blur100_accuracies = train_resnet50(train_dataset, val_dataset, batch_size, num_epochs, augmentation="blur100")
@@ -249,6 +248,7 @@ def main():
     print(f"blur full F1 Score: {blurfull_f1:.2f}")
     print(f"blur full Precision: {blurfull_precision:.2f}")
     print(f"blur full Recall: {blurfull_recall:.2f}")
+    '''
 
 if __name__ == "__main__":
     main()

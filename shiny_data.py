@@ -1,4 +1,4 @@
-from PIL import Image, ImageFilter
+from PIL import Image, ImageFilter, ImageEnhance
 #from tensorflow.keras import datasets, layers, models, optimizers
 import matplotlib.pyplot as plt
 from pathlib import Path
