@@ -92,7 +92,7 @@ def load_resize(img_path, size=(224,224)):
     img = img.resize(size)
     return np.array(img)
 
-def label_and_split(images, label):
+def label_and_split(images, label, training_size, val_size, testing_size):
     random.shuffle(images)
     return (
         list(zip(images[:training_size], [label]*training_size)),
@@ -133,10 +133,10 @@ def load_split_images(training_size=2500, val_size=500, testing_size=1000):
     print("Other images loaded")
 
 
-    t_train, t_val, t_test = label_and_split(tumour_imgs, 'Tumour')
-    i_train, i_val, i_test = label_and_split(immune_imgs, 'Immune')
-    s_train, s_val, s_test = label_and_split(stromal_imgs, 'Stromal')
-    o_train, o_val, o_test = label_and_split(other_imgs, 'Other')
+    t_train, t_val, t_test = label_and_split(tumour_imgs, 'Tumour', training_size, val_size, testing_size)
+    i_train, i_val, i_test = label_and_split(immune_imgs, 'Immune', training_size, val_size, testing_size)
+    s_train, s_val, s_test = label_and_split(stromal_imgs, 'Stromal', training_size, val_size, testing_size)
+    o_train, o_val, o_test = label_and_split(other_imgs, 'Other', training_size, val_size, testing_size)
 
     # Combine and shuffle
     training_data = t_train + i_train + s_train + o_train
