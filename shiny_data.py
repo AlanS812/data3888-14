@@ -122,7 +122,7 @@ def load_split_images(training_size=2500, val_size=500, testing_size=1000):
     testing_data = []
 
     # Load the images
-    tumour_files, immune_files, stromal_files, other_files = get_image_paths("data/100")
+    tumour_files, immune_files, stromal_files, other_files = get_image_paths("data/original_data")
     tumour_imgs = [load_resize(img_path) for img_path in tumour_files[:total_size]]
     print("Tumour images loaded")
     immune_imgs = [load_resize(img_path) for img_path in immune_files[:total_size]]
@@ -161,6 +161,8 @@ def load_split_images(training_size=2500, val_size=500, testing_size=1000):
     y_train_enc = le.fit_transform(y_train)
     y_val_enc = le.transform(y_val)
     y_test_enc = le.transform(y_test)
+
+    print(list(zip(le.classes_, le.transform(le.classes_))))
 
     return Xmat_train, Xmat_val, Xmat_test, y_train_enc, y_val_enc, y_test_enc
 
@@ -259,84 +261,84 @@ def get_original(training_size=2500, val_size=500, testing_size=1000):
     train_dataset, val_dataset, test_dataset = transform_datasets(Xmat_train, Xmat_val, Xmat_test, y_train_enc, y_val_enc, y_test_enc)
     return train_dataset, val_dataset, test_dataset
 
-def get_blurred_1(training_size=2500, val_size=500, testing_size=1000):
-    """
-    Load the blurred dataset
-    """
-    Xmat_train, Xmat_val, Xmat_test, y_train_enc, y_val_enc, y_test_enc = load_split_images(training_size, val_size, testing_size)
-    Xmat_train = apply_blur(Xmat_train, 1)
+# def get_blurred_50(training_size=2500, val_size=500, testing_size=1000):
+#     """
+#     Load the blurred dataset
+#     """
+#     Xmat_train, Xmat_val, Xmat_test, y_train_enc, y_val_enc, y_test_enc = load_split_images(training_size, val_size, testing_size)
+#     Xmat_train = apply_blur(Xmat_train, 50)
     
-    train_dataset, val_dataset, test_dataset = transform_datasets(Xmat_train, Xmat_val, Xmat_test, y_train_enc, y_val_enc, y_test_enc)
-    return train_dataset, val_dataset, test_dataset
+#     train_dataset, val_dataset, test_dataset = transform_datasets(Xmat_train, Xmat_val, Xmat_test, y_train_enc, y_val_enc, y_test_enc)
+#     return train_dataset, val_dataset, test_dataset
 
-def get_blurred_3(training_size=2500, val_size=500, testing_size=1000):
-    """
-    Load the blurred dataset
-    """
-    Xmat_train, Xmat_val, Xmat_test, y_train_enc, y_val_enc, y_test_enc = load_split_images(training_size, val_size, testing_size)
-    Xmat_train = apply_blur(Xmat_train, 3)
+# def get_blurred_100(training_size=2500, val_size=500, testing_size=1000):
+#     """
+#     Load the blurred dataset
+#     """
+#     Xmat_train, Xmat_val, Xmat_test, y_train_enc, y_val_enc, y_test_enc = load_split_images(training_size, val_size, testing_size)
+#     Xmat_train = apply_blur(Xmat_train, 100)
     
-    train_dataset, val_dataset, test_dataset = transform_datasets(Xmat_train, Xmat_val, Xmat_test, y_train_enc, y_val_enc, y_test_enc)
-    return train_dataset, val_dataset, test_dataset
+#     train_dataset, val_dataset, test_dataset = transform_datasets(Xmat_train, Xmat_val, Xmat_test, y_train_enc, y_val_enc, y_test_enc)
+#     return train_dataset, val_dataset, test_dataset
 
-def get_blurred_5(training_size=2500, val_size=500, testing_size=1000):
-    """
-    Load the blurred dataset
-    """
-    Xmat_train, Xmat_val, Xmat_test, y_train_enc, y_val_enc, y_test_enc = load_split_images(training_size, val_size, testing_size)
-    Xmat_train = apply_blur(Xmat_train, 5)
+# def get_blurred_150(training_size=2500, val_size=500, testing_size=1000):
+#     """
+#     Load the blurred dataset
+#     """
+#     Xmat_train, Xmat_val, Xmat_test, y_train_enc, y_val_enc, y_test_enc = load_split_images(training_size, val_size, testing_size)
+#     Xmat_train = apply_blur(Xmat_train, 150)
     
-    train_dataset, val_dataset, test_dataset = transform_datasets(Xmat_train, Xmat_val, Xmat_test, y_train_enc, y_val_enc, y_test_enc)
-    return train_dataset, val_dataset, test_dataset
+#     train_dataset, val_dataset, test_dataset = transform_datasets(Xmat_train, Xmat_val, Xmat_test, y_train_enc, y_val_enc, y_test_enc)
+#     return train_dataset, val_dataset, test_dataset
 
-def get_blurred_7(training_size=2500, val_size=500, testing_size=1000):
-    """
-    Load the blurred dataset
-    """
-    Xmat_train, Xmat_val, Xmat_test, y_train_enc, y_val_enc, y_test_enc = load_split_images(training_size, val_size, testing_size)
-    Xmat_train = apply_blur(Xmat_train, 7)
+# def get_blurred_200(training_size=2500, val_size=500, testing_size=1000):
+#     """
+#     Load the blurred dataset
+#     """
+#     Xmat_train, Xmat_val, Xmat_test, y_train_enc, y_val_enc, y_test_enc = load_split_images(training_size, val_size, testing_size)
+#     Xmat_train = apply_blur(Xmat_train, 200)
     
-    train_dataset, val_dataset, test_dataset = transform_datasets(Xmat_train, Xmat_val, Xmat_test, y_train_enc, y_val_enc, y_test_enc)
-    return train_dataset, val_dataset, test_dataset
+#     train_dataset, val_dataset, test_dataset = transform_datasets(Xmat_train, Xmat_val, Xmat_test, y_train_enc, y_val_enc, y_test_enc)
+#     return train_dataset, val_dataset, test_dataset
 
-def get_blurred_10(training_size=2500, val_size=500, testing_size=1000):
-    """
-    Load the blurred dataset
-    """
-    Xmat_train, Xmat_val, Xmat_test, y_train_enc, y_val_enc, y_test_enc = load_split_images(training_size, val_size, testing_size)
-    Xmat_train = apply_blur(Xmat_train, 10)
+# def get_blurred_full(training_size=2500, val_size=500, testing_size=1000):
+#     """
+#     Load the blurred dataset
+#     """
+#     Xmat_train, Xmat_val, Xmat_test, y_train_enc, y_val_enc, y_test_enc = load_split_images(training_size, val_size, testing_size)
+#     Xmat_train = apply_full_image_blur(Xmat_train)
     
-    train_dataset, val_dataset, test_dataset = transform_datasets(Xmat_train, Xmat_val, Xmat_test, y_train_enc, y_val_enc, y_test_enc)
-    return train_dataset, val_dataset, test_dataset
+#     train_dataset, val_dataset, test_dataset = transform_datasets(Xmat_train, Xmat_val, Xmat_test, y_train_enc, y_val_enc, y_test_enc)
+#     return train_dataset, val_dataset, test_dataset
 
-def get_greyscale(training_size=2500, val_size=500, testing_size=1000):
-    """
-    Load the greyscale dataset
-    """
-    Xmat_train, Xmat_val, Xmat_test, y_train_enc, y_val_enc, y_test_enc = load_split_images(training_size, val_size, testing_size)
-    Xmat_train = apply_greyscale(Xmat_train)
+# def get_greyscale(training_size=2500, val_size=500, testing_size=1000):
+#     """
+#     Load the greyscale dataset
+#     """
+#     Xmat_train, Xmat_val, Xmat_test, y_train_enc, y_val_enc, y_test_enc = load_split_images(training_size, val_size, testing_size)
+#     Xmat_train = apply_greyscale(Xmat_train)
     
-    train_dataset, val_dataset, test_dataset = transform_datasets(Xmat_train, Xmat_val, Xmat_test, y_train_enc, y_val_enc, y_test_enc)
-    return train_dataset, val_dataset, test_dataset
+#     train_dataset, val_dataset, test_dataset = transform_datasets(Xmat_train, Xmat_val, Xmat_test, y_train_enc, y_val_enc, y_test_enc)
+#     return train_dataset, val_dataset, test_dataset
 
-def get_contrast_1_5(training_size=2500, val_size=500, testing_size=1000):
-    """
-    Load the contrast dataset
-    """
-    Xmat_train, Xmat_val, Xmat_test, y_train_enc, y_val_enc, y_test_enc = load_split_images(training_size, val_size, testing_size)
-    Xmat_train = adjust_contrast(Xmat_train, 1.5)
+# def get_contrast_1_5(training_size=2500, val_size=500, testing_size=1000):
+#     """
+#     Load the contrast dataset
+#     """
+#     Xmat_train, Xmat_val, Xmat_test, y_train_enc, y_val_enc, y_test_enc = load_split_images(training_size, val_size, testing_size)
+#     Xmat_train = adjust_contrast(Xmat_train, 1.5)
     
-    train_dataset, val_dataset, test_dataset = transform_datasets(Xmat_train, Xmat_val, Xmat_test, y_train_enc, y_val_enc, y_test_enc)
-    return train_dataset, val_dataset, test_dataset
+#     train_dataset, val_dataset, test_dataset = transform_datasets(Xmat_train, Xmat_val, Xmat_test, y_train_enc, y_val_enc, y_test_enc)
+#     return train_dataset, val_dataset, test_dataset
 
-def get_contrast_0_5(training_size=2500, val_size=500, testing_size=1000):
-    """
-    Load the contrast dataset
-    """
-    Xmat_train, Xmat_val, Xmat_test, y_train_enc, y_val_enc, y_test_enc = load_split_images(training_size, val_size, testing_size)
-    Xmat_train = adjust_contrast(Xmat_train, 0.5)
+# def get_contrast_0_5(training_size=2500, val_size=500, testing_size=1000):
+#     """
+#     Load the contrast dataset
+#     """
+#     Xmat_train, Xmat_val, Xmat_test, y_train_enc, y_val_enc, y_test_enc = load_split_images(training_size, val_size, testing_size)
+#     Xmat_train = adjust_contrast(Xmat_train, 0.5)
     
-    train_dataset, val_dataset, test_dataset = transform_datasets(Xmat_train, Xmat_val, Xmat_test, y_train_enc, y_val_enc, y_test_enc)
-    return train_dataset, val_dataset, test_dataset
+#     train_dataset, val_dataset, test_dataset = transform_datasets(Xmat_train, Xmat_val, Xmat_test, y_train_enc, y_val_enc, y_test_enc)
+#     return train_dataset, val_dataset, test_dataset
 
 
