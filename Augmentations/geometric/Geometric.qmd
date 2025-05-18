@@ -1,0 +1,68 @@
+---
+title: "Week7GeometricAugmentations"
+author: "Elise"
+format: html
+editor: visual
+---
+
+## Geometric Augmentations
+
+| Augmentation | Why It Matters for Cell Data |
+|------------------------|------------------------------------------------|
+| **Rotation** | Cells can appear at any angle under a microscope; helps the model learn rotation-invariant features. |
+| **Flipping** | Horizontal/vertical flips simulate natural variation in orientation. |
+| **Scaling** | Cells might vary in size due to imaging resolution or biological variance. |
+| **Cropping** | Mimics varying spatial focus; useful if cells are centered differently. |
+| **Translation** (not shown) | Slight shifts emulate real-world sample prep differences. |
+
+```{r}
+# required packages 
+library(magick)
+library(imager)
+
+img_path <- "cell_image_example.jpg" # replace this with our image paths 
+img_magick <- image_read(img_path)
+img_imager <- load.image(img_path)
+
+# Geometric Augmentation Examples
+
+# Rotation (e.g. cells can appear in any orientation)
+rotated_90 <- image_rotate(img_magick, 90)
+rotated_180 <- image_rotate(img_magick, 180)
+
+# Flips
+flipped_h <- image_flop(img_magick) # Horiztonal
+flipped_v <- image_flip(img_magick) # Vertical
+
+# Scaling
+scaled_up <- image_scale(img_magick, "150%")
+scaled_down <- image_scale(img_magick, "50%")
+
+# Random Cropping (different framing of cells)
+cropped <- image_crop(img_magick, "100x100+30+30")  # width x height + offset_x + offset_y
+
+# Pixel-wise transforms (e.g. rotate with interpolation, i.e., flipping at a non-right angle)
+rotated_imager <- imrotate(img_imager, angle = 45) 
+
+# Display Examples
+#par(mfrow = c(2, 3))
+#plot(rotated_90); title("Rotate 90°")
+#plot(flipped_h); title("Flipped Horizontally")
+#plot(flipped_v); title("Flipped Vertically")
+#plot(scaled_up); title("Scaled Up")
+#plot(cropped); title("Random Crop")
+#plot(rotated_imager, main = "Imager Rotate 45°")
+
+# Translation
+translated_img <- imtranslate(img, dx = 20, dy = 10) # dx is horiztonal, dy veritcal 
+
+# Ploting the original and translated image
+par(mfrow = c(1, 2))
+plot(img, main = "Original")
+plot(translated_img, main = "Translated (Right 20, Down 10)")
+
+# Works for colour or greyscale images
+# The translated image will have blank (black) borders where the image was shifted.
+# Can crop/pad these later if needed.
+# May want to combine translation with cropping or random positioning to avoid too much empty space.
+```
