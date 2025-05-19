@@ -15,6 +15,58 @@ import torch.nn as nn
 import torch.optim as optim
 import cv2
 
+def load_split_images_50(training_size=2500, val_size=500, testing_size=1000):
+    return load_split_images_generic("data/50", training_size, val_size, testing_size)
+
+def load_split_images_100(training_size=2500, val_size=500, testing_size=1000):
+    return load_split_images_generic("data/100", training_size, val_size, testing_size)
+
+def load_split_images_generic(base_path, training_size=2500, val_size=500, testing_size=1000):
+    random.seed(3888)
+    np.random.seed(3888)
+
+    total_size = training_size + val_size + testing_size
+
+    # Load the images
+    tumour_files, immune_files, stromal_files, other_files = get_image_paths(base_path)
+    
+    tumour_imgs = [load_resize(img_path) for img_path in tumour_files[:total_size]]
+    print("Tumour images loaded")
+    immune_imgs = [load_resize(img_path) for img_path in immune_files[:total_size]]
+    print("Immune images loaded")
+    stromal_imgs = [load_resize(img_path) for img_path in stromal_files[:total_size]]
+    print("Stromal images loaded")
+    other_imgs = [load_resize(img_path) for img_path in other_files[:total_size]]
+    print("Other images loaded")
+    
+    t_train, t_val, t_test = label_and_split(tumour_imgs, 'Tumour', training_size, val_size, testing_size)
+    i_train, i_val, i_test = label_and_split(immune_imgs, 'Immune', training_size, val_size, testing_size)
+    s_train, s_val, s_test = label_and_split(stromal_imgs, 'Stromal', training_size, val_size, testing_size)
+    o_train, o_val, o_test = label_and_split(other_imgs, 'Other', training_size, val_size, testing_size)
+
+    training_data = t_train + i_train + s_train + o_train
+    val_data = t_val + i_val + s_val + o_val
+    testing_data = t_test + i_test + s_test + o_test
+
+    random.shuffle(training_data)
+    random.shuffle(val_data)
+    random.shuffle(testing_data)
+
+    Xmat_train, y_train = zip(*training_data)
+    Xmat_val, y_val = zip(*val_data)
+    Xmat_test, y_test = zip(*testing_data)
+
+    Xmat_train = np.stack(Xmat_train)
+    Xmat_val = np.stack(Xmat_val)
+    Xmat_test = np.stack(Xmat_test)
+
+    le = LabelEncoder()
+    y_train_enc = le.fit_transform(y_train)
+    y_val_enc = le.transform(y_val)
+    y_test_enc = le.transform(y_test)
+
+    return Xmat_train, Xmat_val, Xmat_test, y_train_enc, y_val_enc, y_test_enc
+  
 
 def get_image_paths(base_path="data/100"):
     """
@@ -260,6 +312,20 @@ def get_original(training_size=2500, val_size=500, testing_size=1000):
     Xmat_train, Xmat_val, Xmat_test, y_train_enc, y_val_enc, y_test_enc = load_split_images(training_size, val_size, testing_size)
     train_dataset, val_dataset, test_dataset = transform_datasets(Xmat_train, Xmat_val, Xmat_test, y_train_enc, y_val_enc, y_test_enc)
     return train_dataset, val_dataset, test_dataset
+  
+def get_original_50(training_size=2500, val_size=500, testing_size=1000):
+    """
+    Load the original 50-resolution dataset
+    """
+    Xmat_train, Xmat_val, Xmat_test, y_train_enc, y_val_enc, y_test_enc = load_split_images_50(training_size, val_size, testing_size)
+    return transform_datasets(Xmat_train, Xmat_val, Xmat_test, y_train_enc, y_val_enc, y_test_enc)
+
+def get_original_100(training_size=2500, val_size=500, testing_size=1000):
+    """
+    Load the original 100-resolution dataset
+    """
+    Xmat_train, Xmat_val, Xmat_test, y_train_enc, y_val_enc, y_test_enc = load_split_images_100(training_size, val_size, testing_size)
+    return transform_datasets(Xmat_train, Xmat_val, Xmat_test, y_train_enc, y_val_enc, y_test_enc)
 
 # def get_blurred_50(training_size=2500, val_size=500, testing_size=1000):
 #     """
