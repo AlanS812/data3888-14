@@ -92,13 +92,6 @@ def load_resize(img_path, size=(224,224)):
     img = img.resize(size)
     return np.array(img)
 
-def label_and_split(images, label, training_size, val_size, testing_size):
-    random.shuffle(images)
-    return (
-        list(zip(images[:training_size], [label]*training_size)),
-        list(zip(images[training_size:training_size+val_size], [label]*val_size)),
-        list(zip(images[training_size+val_size:training_size+val_size+testing_size], [label]*testing_size)),
-    )
 
 def label_and_split(images, label, training_size=2500, val_size=500, testing_size=1000):
     random.shuffle(images)
@@ -125,12 +118,16 @@ def load_split_images(training_size=2500, val_size=500, testing_size=1000):
     tumour_files, immune_files, stromal_files, other_files = get_image_paths("data/original_data")
     tumour_imgs = [load_resize(img_path) for img_path in tumour_files[:total_size]]
     print("Tumour images loaded")
+    print(f"Tumour: loaded {len(tumour_imgs)} images")
     immune_imgs = [load_resize(img_path) for img_path in immune_files[:total_size]]
     print("Immune images loaded")
+    print(f"Immune: loaded {len(immune_imgs)} images")
     stromal_imgs = [load_resize(img_path) for img_path in stromal_files[:total_size]]
     print("Stromal images loaded")
+    print(f"Stromal: loaded {len(stromal_imgs)} images")
     other_imgs = [load_resize(img_path) for img_path in other_files[:total_size]]
     print("Other images loaded")
+    print(f"Other: loaded {len(other_imgs)} images")
 
 
     t_train, t_val, t_test = label_and_split(tumour_imgs, 'Tumour', training_size, val_size, testing_size)
