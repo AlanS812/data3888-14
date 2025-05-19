@@ -14,59 +14,8 @@ from torchvision import transforms, models
 import torch.nn as nn
 import torch.optim as optim
 import cv2
+from skimage import util
 
-def load_split_images_50(training_size=2500, val_size=500, testing_size=1000):
-    return load_split_images_generic("data/50", training_size, val_size, testing_size)
-
-def load_split_images_100(training_size=2500, val_size=500, testing_size=1000):
-    return load_split_images_generic("data/100", training_size, val_size, testing_size)
-
-def load_split_images_generic(base_path, training_size=2500, val_size=500, testing_size=1000):
-    random.seed(3888)
-    np.random.seed(3888)
-
-    total_size = training_size + val_size + testing_size
-
-    # Load the images
-    tumour_files, immune_files, stromal_files, other_files = get_image_paths(base_path)
-    
-    tumour_imgs = [load_resize(img_path) for img_path in tumour_files[:total_size]]
-    print("Tumour images loaded")
-    immune_imgs = [load_resize(img_path) for img_path in immune_files[:total_size]]
-    print("Immune images loaded")
-    stromal_imgs = [load_resize(img_path) for img_path in stromal_files[:total_size]]
-    print("Stromal images loaded")
-    other_imgs = [load_resize(img_path) for img_path in other_files[:total_size]]
-    print("Other images loaded")
-    
-    t_train, t_val, t_test = label_and_split(tumour_imgs, 'Tumour', training_size, val_size, testing_size)
-    i_train, i_val, i_test = label_and_split(immune_imgs, 'Immune', training_size, val_size, testing_size)
-    s_train, s_val, s_test = label_and_split(stromal_imgs, 'Stromal', training_size, val_size, testing_size)
-    o_train, o_val, o_test = label_and_split(other_imgs, 'Other', training_size, val_size, testing_size)
-
-    training_data = t_train + i_train + s_train + o_train
-    val_data = t_val + i_val + s_val + o_val
-    testing_data = t_test + i_test + s_test + o_test
-
-    random.shuffle(training_data)
-    random.shuffle(val_data)
-    random.shuffle(testing_data)
-
-    Xmat_train, y_train = zip(*training_data)
-    Xmat_val, y_val = zip(*val_data)
-    Xmat_test, y_test = zip(*testing_data)
-
-    Xmat_train = np.stack(Xmat_train)
-    Xmat_val = np.stack(Xmat_val)
-    Xmat_test = np.stack(Xmat_test)
-
-    le = LabelEncoder()
-    y_train_enc = le.fit_transform(y_train)
-    y_val_enc = le.transform(y_val)
-    y_test_enc = le.transform(y_test)
-
-    return Xmat_train, Xmat_val, Xmat_test, y_train_enc, y_val_enc, y_test_enc
-  
 
 def get_image_paths(base_path="data/100"):
     """
@@ -144,6 +93,13 @@ def load_resize(img_path, size=(224,224)):
     img = img.resize(size)
     return np.array(img)
 
+def label_and_split(images, label, training_size, val_size, testing_size):
+    random.shuffle(images)
+    return (
+        list(zip(images[:training_size], [label]*training_size)),
+        list(zip(images[training_size:training_size+val_size], [label]*val_size)),
+        list(zip(images[training_size+val_size:training_size+val_size+testing_size], [label]*testing_size)),
+    )
 
 def label_and_split(images, label, training_size=2500, val_size=500, testing_size=1000):
     random.shuffle(images)
@@ -154,66 +110,61 @@ def label_and_split(images, label, training_size=2500, val_size=500, testing_siz
     )
 
 def load_split_images(training_size=2500, val_size=500, testing_size=1000):
-    """
-    Split the data into training and testing sets
-    """
     random.seed(3888)
     np.random.seed(3888)
 
-    total_size = training_size + val_size + testing_size
+    total_size = training_size + val_size + testing_size * 3  # Adjust total size for 3 test sets
 
-    training_data = []
-    val_data = []
-    testing_data = []
-
-    # Load the images
     tumour_files, immune_files, stromal_files, other_files = get_image_paths("data/original_data")
     tumour_imgs = [load_resize(img_path) for img_path in tumour_files[:total_size]]
-    print("Tumour images loaded")
-    print(f"Tumour: loaded {len(tumour_imgs)} images")
     immune_imgs = [load_resize(img_path) for img_path in immune_files[:total_size]]
-    print("Immune images loaded")
-    print(f"Immune: loaded {len(immune_imgs)} images")
     stromal_imgs = [load_resize(img_path) for img_path in stromal_files[:total_size]]
-    print("Stromal images loaded")
-    print(f"Stromal: loaded {len(stromal_imgs)} images")
     other_imgs = [load_resize(img_path) for img_path in other_files[:total_size]]
-    print("Other images loaded")
-    print(f"Other: loaded {len(other_imgs)} images")
 
+    t_train, t_val, t_test_all = label_and_split(tumour_imgs, 'Tumour', training_size, val_size, testing_size * 3)
+    i_train, i_val, i_test_all = label_and_split(immune_imgs, 'Immune', training_size, val_size, testing_size * 3)
+    s_train, s_val, s_test_all = label_and_split(stromal_imgs, 'Stromal', training_size, val_size, testing_size * 3)
+    o_train, o_val, o_test_all = label_and_split(other_imgs, 'Other', training_size, val_size, testing_size * 3)
 
-    t_train, t_val, t_test = label_and_split(tumour_imgs, 'Tumour', training_size, val_size, testing_size)
-    i_train, i_val, i_test = label_and_split(immune_imgs, 'Immune', training_size, val_size, testing_size)
-    s_train, s_val, s_test = label_and_split(stromal_imgs, 'Stromal', training_size, val_size, testing_size)
-    o_train, o_val, o_test = label_and_split(other_imgs, 'Other', training_size, val_size, testing_size)
-
-    # Combine and shuffle
     training_data = t_train + i_train + s_train + o_train
     val_data = t_val + i_val + s_val + o_val
-    testing_data = t_test + i_test + s_test + o_test
+
+    # Split combined test data into 3 equal test sets
+    t_tests = [t_test_all[i*testing_size:(i+1)*testing_size] for i in range(3)]
+    i_tests = [i_test_all[i*testing_size:(i+1)*testing_size] for i in range(3)]
+    s_tests = [s_test_all[i*testing_size:(i+1)*testing_size] for i in range(3)]
+    o_tests = [o_test_all[i*testing_size:(i+1)*testing_size] for i in range(3)]
+
+    testing_sets = []
+    for i in range(3):
+        test_set = t_tests[i] + i_tests[i] + s_tests[i] + o_tests[i]
+        random.shuffle(test_set)
+        testing_sets.append(test_set)
 
     random.shuffle(training_data)
     random.shuffle(val_data)
-    random.shuffle(testing_data)
 
-    # Unzip into X and y
     Xmat_train, y_train = zip(*training_data)
     Xmat_val, y_val = zip(*val_data)
-    Xmat_test, y_test = zip(*testing_data)
 
     Xmat_train = np.stack(Xmat_train)
     Xmat_val = np.stack(Xmat_val)
-    Xmat_test = np.stack(Xmat_test)
 
-    # Encode labels
+    Xmat_tests = []
+    y_tests_enc = []
     le = LabelEncoder()
+    
     y_train_enc = le.fit_transform(y_train)
     y_val_enc = le.transform(y_val)
-    y_test_enc = le.transform(y_test)
+
+    for test_set in testing_sets:
+        X_test, y_test = zip(*test_set)
+        Xmat_tests.append(np.stack(X_test))
+        y_tests_enc.append(le.transform(y_test))
 
     print(list(zip(le.classes_, le.transform(le.classes_))))
 
-    return Xmat_train, Xmat_val, Xmat_test, y_train_enc, y_val_enc, y_test_enc
+    return Xmat_train, Xmat_val, Xmat_tests[0], Xmat_tests[1], Xmat_tests[2], y_train_enc, y_val_enc, y_tests_enc[0], y_tests_enc[1], y_tests_enc[2]
 
 
 class NumpyImageDataset(Dataset):
@@ -242,32 +193,50 @@ def resize_images(images, size):
     resized_images = []
     for img in images:
         pil_img = Image.fromarray(img)
-        resized_img = pil_img.resize(size, Image.ANTIALIAS)
+        resized_img = pil_img.resize(size, Image.Resampling.LANCZOS)
         resized_images.append(np.array(resized_img))
     return np.array(resized_images)
 
-def transform_datasets(Xmat_train, Xmat_val, Xmat_test, y_train_enc, y_val_enc, y_test_enc):
+def transform_datasets(Xmat_train, Xmat_val, Xmat_test1, Xmat_test2, Xmat_test3, y_train_enc, y_val_enc, y_test_enc1, y_test_enc2, y_test_enc3):
     transform = transforms.Compose([
-    transforms.ToTensor(),
-    transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])])
+        transforms.ToTensor(),
+        transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])])
 
     train_dataset = NumpyImageDataset(Xmat_train, y_train_enc, transform=transform)
     val_dataset = NumpyImageDataset(Xmat_val, y_val_enc, transform=transform)
-    test_dataset = NumpyImageDataset(Xmat_test, y_test_enc, transform=transform)
+    test_dataset1 = NumpyImageDataset(Xmat_test1, y_test_enc1, transform=transform)
+    test_dataset2 = NumpyImageDataset(Xmat_test2, y_test_enc2, transform=transform)
+    test_dataset3 = NumpyImageDataset(Xmat_test3, y_test_enc3, transform=transform)
 
-    return train_dataset, val_dataset, test_dataset
+    return train_dataset, val_dataset, test_dataset1, test_dataset2, test_dataset3
 
 # Augmentations
 
 def apply_blur(images, size):
     size = int(size)
     blurred = []
+    if size > 0:
+        for img in images:
+            pil_img = Image.fromarray(img)
+            blur = pil_img.filter(ImageFilter.GaussianBlur(radius=size))
+            blurred.append(np.array(blur))
+        return np.array(blurred).astype(np.uint8)  # ensure uint8 output
+    else:
+        return images
+
+def apply_noise(images, mean=0, std=10):
+    noisy_images = []
+    if std > 0:
+        for img in images:
+            np.random.seed(3888)
+            noise = np.random.normal(mean, std, img.shape)
+            noisy_img = img + noise
+            noisy_img = np.clip(noisy_img, 0, 255)
+            noisy_images.append(noisy_img.astype(np.uint8))  # ensure uint8 output
+        return np.array(noisy_images)
+    else:
+        return images
     
-    for img in images:
-        pil_img = Image.fromarray(img)
-        blur = pil_img.filter(ImageFilter.GaussianBlur(radius=size))
-        blurred.append(np.array(blur))
-    return np.array(blurred)
 
 def apply_full_image_blur(images):
     blurred = []
@@ -306,23 +275,9 @@ def get_original(training_size=2500, val_size=500, testing_size=1000):
     """
     Load the original dataset
     """
-    Xmat_train, Xmat_val, Xmat_test, y_train_enc, y_val_enc, y_test_enc = load_split_images(training_size, val_size, testing_size)
-    train_dataset, val_dataset, test_dataset = transform_datasets(Xmat_train, Xmat_val, Xmat_test, y_train_enc, y_val_enc, y_test_enc)
-    return train_dataset, val_dataset, test_dataset
-  
-def get_original_50(training_size=2500, val_size=500, testing_size=1000):
-    """
-    Load the original 50-resolution dataset
-    """
-    Xmat_train, Xmat_val, Xmat_test, y_train_enc, y_val_enc, y_test_enc = load_split_images_50(training_size, val_size, testing_size)
-    return transform_datasets(Xmat_train, Xmat_val, Xmat_test, y_train_enc, y_val_enc, y_test_enc)
-
-def get_original_100(training_size=2500, val_size=500, testing_size=1000):
-    """
-    Load the original 100-resolution dataset
-    """
-    Xmat_train, Xmat_val, Xmat_test, y_train_enc, y_val_enc, y_test_enc = load_split_images_100(training_size, val_size, testing_size)
-    return transform_datasets(Xmat_train, Xmat_val, Xmat_test, y_train_enc, y_val_enc, y_test_enc)
+    Xmat_train, Xmat_val, Xmat_test1, Xmat_test2, Xmat_test3, y_train_enc, y_val_enc, y_test_enc1, y_test_enc2, y_test_enc3 = load_split_images(training_size, val_size, testing_size)
+    train_dataset, val_dataset, test_dataset1, test_dataset2, test_dataset3 = transform_datasets(Xmat_train, Xmat_val, Xmat_test1, Xmat_test2, Xmat_test3, y_train_enc, y_val_enc, y_test_enc1, y_test_enc2, y_test_enc3)
+    return train_dataset, val_dataset, test_dataset1, test_dataset2, test_dataset3
 
 # def get_blurred_50(training_size=2500, val_size=500, testing_size=1000):
 #     """
