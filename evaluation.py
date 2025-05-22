@@ -12,8 +12,8 @@ from torchvision import transforms, models
 import torch.nn as nn
 import cv2
 from PIL import Image, ImageFilter
-import tensorflow as tf
-from tensorflow.keras.models import load_model
+#import tensorflow as tf
+#from tensorflow.keras.models import load_model
 
 def test_augmented_xgboost():
     # Load test sets
@@ -136,7 +136,7 @@ def test_augmented_resnet():
     model = models.resnet50(pretrained=False)
     num_ftrs = model.fc.in_features
     model.fc = nn.Linear(num_ftrs, 4)
-    model.load_state_dict(torch.load('resnet50.pt', map_location=device))
+    model.load_state_dict(torch.load('resnet50_models/resnet50_original_model.pt', map_location=device))
     model = model.to(device)
     model.eval()
 
@@ -149,7 +149,7 @@ def test_augmented_resnet():
     noise_levels = [0,1,3,5,10,20,30]
     
     # Init csv
-    csv_file = 'resnet50_augmented_metrics.csv'
+    csv_file = 'metrics/resnet50_augmented_metrics.csv'
     test_datasets = [test_dataset1, test_dataset2, test_dataset3]
     test_set_names = ['1', '2', '3']
 
