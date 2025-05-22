@@ -313,4 +313,3 @@ def test_augmented_cnn():
 
 if __name__ == "__main__":
     test_augmented_resnet()
-    test_augmented_cnn()
