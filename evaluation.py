@@ -12,8 +12,8 @@ from torchvision import transforms, models
 import torch.nn as nn
 import cv2
 from PIL import Image, ImageFilter
-import tensorflow as tf
-from tensorflow.keras.models import load_model
+#import tensorflow as tf
+#from tensorflow.keras.models import load_model
 
 def test_augmented_xgboost():
     # Load test sets
@@ -314,6 +314,6 @@ def test_augmented_cnn():
                 print(f"Fold: {test_num}, Blur: {blur_size}, Noise: {noise_level}, Acc: {accuracy}")
 
 if __name__ == "__main__":
-    # test_augmented_resnet()
+    test_augmented_resnet()
     # test_augmented_xgboost()
-    test_augmented_cnn()
+    # test_augmented_cnn()
