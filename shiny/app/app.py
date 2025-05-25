@@ -3,8 +3,83 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from PIL import Image, ImageEnhance, ImageFilter
-#from shiny.render import RenderPlot
 import seaborn as sns
+import shiny_data
+import torch
+from tensorflow.keras.models import load_model
+import xgboost as xgb
+import joblib
+from torchvision import models
+import torch.nn as nn
+import evaluation
+
+# Load once
+pca = joblib.load("Base_pca.joblib")
+xgb_model = xgb.XGBClassifier()
+xgb_model.load_model("xgboost.json")
+cnn_model = load_model("cnn_original.h5")
+
+device = torch.device("cpu")
+rn_model = models.resnet50(pretrained=False)
+num_ftrs = rn_model.fc.in_features
+rn_model.fc = nn.Linear(num_ftrs, 4)
+rn_model.load_state_dict(torch.load("resnet50.pt", map_location=device))
+rn_model = rn_model.to(device)
+rn_model.eval()
+
+rf_model = joblib.load("rf_pca_model.joblib")
+
+# Prediction functions
+
+def predict_rf(img, pca, model):
+    blur_sizes = [0, 1, 3, 5, 7, 9, 19]
+    noise_levels = [0, 1, 3, 5, 10, 20, 30]
+    preds = np.empty((len(noise_levels), len(blur_sizes)), dtype=int)
+    
+    for i, noise in enumerate(noise_levels):
+        for j, blur in enumerate(blur_sizes):
+            aug = shiny_data.apply_noise(shiny_data.apply_blur(img[np.newaxis, ...], blur), std=noise)
+            aug_flat = aug.reshape(1, -1)
+            aug_pca = pca.transform(aug_flat)
+            preds[i, j] = model.predict(aug_pca)[0]
+    
+    return preds, blur_sizes, noise_levels
+  
+def predict_cnn(img, model):
+    blur_sizes = [0,1,3,5,7,9,19]
+    noise_levels = [0,1,3,5,10,20,30]
+    preds = np.empty((len(noise_levels), len(blur_sizes)), dtype=int)
+    for i, noise in enumerate(noise_levels):
+        for j, blur in enumerate(blur_sizes):
+            aug = shiny_data.apply_noise(shiny_data.apply_blur(img[np.newaxis, ...], blur), std=noise)
+            y_probs = model.predict(aug)
+            preds[i, j] = np.argmax(y_probs, axis=1)[0]
+    return preds, blur_sizes, noise_levels
+
+def predict_xgb(img, pca, model):
+    blur_sizes = [0,1,3,5,7,9,19]
+    noise_levels = [0,1,3,5,10,20,30]
+    preds = np.empty((len(noise_levels), len(blur_sizes)), dtype=int)
+    for i, noise in enumerate(noise_levels):
+        for j, blur in enumerate(blur_sizes):
+            aug = shiny_data.apply_noise(shiny_data.apply_blur(img[np.newaxis, ...], blur), std=noise)
+            aug_flat = aug.reshape(1, -1)
+            aug_pca = pca.transform(aug_flat)
+            preds[i, j] = model.predict(aug_pca)[0]
+    return preds, blur_sizes, noise_levels
+
+def predict_resnet(img, model):
+    blur_sizes = [0,1,3,5,7,9,19]
+    noise_levels = [0,1,3,5,10,20,30]
+    img_tensor = torch.tensor(img).permute(2, 0, 1).float()
+    preds = np.empty((len(noise_levels), len(blur_sizes)), dtype=int)
+    with torch.no_grad():
+        for i, noise in enumerate(noise_levels):
+            for j, blur in enumerate(blur_sizes):
+                aug = evaluation.apply_augmentations(img_tensor.unsqueeze(0), blur, noise).to(device)
+                outputs = model(aug)
+                preds[i, j] = torch.argmax(torch.softmax(outputs, dim=1), dim=1).item()
+    return preds, blur_sizes, noise_levels
 
 # Shiny justification (notes)
 #Class imbalance and bias: In medical imaging, models often perform unevenly across classes. 
@@ -19,7 +94,6 @@ import seaborn as sns
 #scanning artifacts). Some cell types might degrade in distinct ways — e.g., tumour 
 #cells may remain detectable under blur, while immune cells vanish into noise. 
 #Per-class degradation sensitivity matters.
-
 
 #df = pd.read_csv("results.csv")
 df = pd.read_csv("combined_results_100.csv")
@@ -180,75 +254,60 @@ app_ui = ui.page_navbar(
     ),
     
     ui.nav_panel(
-        "Per-Class Insights",
-        ui.div(
-            # === ROW 1 ===
-            ui.layout_columns(
-                ui.card(
-                    ui.h4("Model Variant", style="font-size: 1.1rem; font-weight: 600;"),
-                    ui.input_radio_buttons(
-                        "selected_model",
-                        "",
-                        choices=["RF (PCA)", "XGBoost (PCA)", "CNN", "ResNet"],
-                        selected="RF (PCA)"
-                    ),
-                    ui.h4("Cell Group", style="font-size: 1.1rem; font-weight: 600;"),
-                    ui.input_radio_buttons(
-                        "selected_class",
-                        "",
-                        choices=["Tumour", "Immune", "Stromal", "Other"],
-                        selected="Tumour"
-                    ),
-                    ui.h4("Metric", style="font-size: 1.1rem; font-weight: 600;"),
-                    ui.input_radio_buttons(
-                        "heatmap_metric",
-                        "",
-                        choices=["Precision", "Recall", "Confidence"],
-                        selected="Precision",
-                        inline=True
-                    ),
-                    width=2
-                ),
-                ui.card(
-                    ui.output_plot("heatmap"),
-                    width=5
-                ),
-                ui.card(
-                    ui.output_plot("per_class_metric_plot"),
-                    width=5
-                )
-            ),
+      "Per-Class Insights",
+      ui.div(
+        [
     
-            ui.layout_columns(
-                ui.card(
-                    ui.h4("Confusion Matrix Settings", style="font-size: 1.1rem; font-weight: 600;"),
-                     ui.input_radio_buttons(
-                      "cm_blur", 
-                      "Blur Level", 
-                      choices=[0, 1, 3, 5, 7, 9, 19], 
-                      selected=0, 
-                      inline=True
-                  ),
-                  ui.input_radio_buttons(
-                      "cm_noise", 
-                      "Noise Level", 
-                      choices=[0, 1, 3, 5, 10, 20, 30], 
-                      selected=0, 
-                      inline=True
-                  ),
-                    ui.output_plot("confusion_matrix_plot"),
-                    width=12
-                )
-            ),
-            ui.layout_columns(
+          # === ROW 1: Model Selector ===
+          ui.card(
+              ui.h4("Model Variant", style="font-size: 1.1rem; font-weight: 600;"),
+              ui.input_radio_buttons(
+                  "selected_model",
+                  "",
+                  choices=["RF (PCA)", "XGBoost (PCA)", "CNN", "ResNet"],
+                  selected="RF (PCA)",
+                  inline=True
+              ),
+              style="margin-bottom: 1rem;"
+          ),
+    
+          # === ROW 2: Cell Group + Metric + Heatmap + Barplot ===
+          ui.div([
               ui.card(
-                  ui.h4("Upload Your Own Image", style="font-size: 1.1rem; font-weight: 600;"),
-                  ui.input_file("user_image", "Choose a PNG Image", accept=[".png"]),
-                  ui.output_plot("user_prediction_heatmap"),
-                  width=12
-              )
-          )
-        )
+                  ui.div([
+                      ui.h4("Cell Group", style="font-size: 1.1rem; font-weight: 600;"),
+                      ui.input_radio_buttons("selected_class", "", choices=["Tumour", "Immune", "Stromal", "Other"], selected="Tumour", inline=False),
+                      ui.h4("Metric", style="font-size: 1.1rem; font-weight: 600;"),
+                      ui.input_radio_buttons("heatmap_metric", "", choices=["Precision", "Recall", "Confidence"], selected="Precision", inline=False),
+                  ]),
+                  style="flex: 0.75;"
+              ),
+              ui.card(ui.output_plot("heatmap"), style="flex: 2.125;"),
+              ui.card(ui.output_plot("per_class_metric_plot"), style="flex: 2.125;"),
+          ], style="display: flex; gap: 1rem; margin-bottom: 1rem;"),
+    
+          # === ROW 3: Confusion Matrix + Upload Prediction ===
+          ui.div([
+              ui.card(
+                  ui.div([
+                      ui.h4("Confusion Matrix Settings", style="font-size: 1.1rem; font-weight: 600;"),
+                      ui.input_radio_buttons("cm_blur", "Blur Level", choices=[0, 1, 3, 5, 7, 9, 19], selected=0, inline=False),
+                      ui.input_radio_buttons("cm_noise", "Noise Level", choices=[0, 1, 3, 5, 10, 20, 30], selected=0, inline=False),
+                  ]),
+                  style="flex: 0.75;"
+              ),
+              ui.card(ui.output_plot("confusion_matrix_plot"), style="flex: 2.125;"),
+              ui.card(
+                  ui.div([
+                      ui.h4("Upload Your Own Image", style="font-size: 1.1rem; font-weight: 600;"),
+                      ui.input_file("user_image", "Choose a PNG Image", accept=[".png"]),
+                      ui.output_plot("user_prediction_heatmap")
+                  ]),
+                  style="flex: 2.125;"
+              ),
+          ], style="display: flex; gap: 1rem;")
+        ]
+      )
     ),
 
     title="Image Model Dashboard"
@@ -765,9 +824,80 @@ def server(input, output, session):
         disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=labels)
     
         fig, ax = plt.subplots(figsize=(6, 6))
-        disp.plot(ax=ax, cmap="Blues", values_format="d")
+        disp.plot(ax=ax, cmap="Blues", values_format="d", colorbar=False)
         plt.title(f"Confusion Matrix — {model} (Blur {blur}, Noise {noise})")
         return fig
+      
+    @output
+    @render.plot
+    def user_prediction_heatmap():
+        file = input.user_image()
+        if file is None:
+            plt.figure()
+            plt.text(0.5, 0.5, "Upload an image to view predictions", ha='center', va='center')
+            plt.axis("off")
+            return plt.gcf()
+    
+        img_path = file[0]['datapath']
+        img = shiny_data.load_resize(img_path)
+        model_name = input.selected_model()
+    
+        if model_name == "CNN":
+            preds, blur_sizes, noise_levels = predict_cnn(img, cnn_model)
+        elif model_name == "XGBoost (PCA)":
+            preds, blur_sizes, noise_levels = predict_xgb(img, pca, xgb_model)
+        elif model_name == "ResNet":
+            preds, blur_sizes, noise_levels = predict_resnet(img, rn_model)
+        elif model_name == "RF (PCA)":
+            preds, blur_sizes, noise_levels = predict_rf(img, pca, rf_model)
+        else:
+            plt.figure()
+            plt.text(0.5, 0.5, "Model not supported for prediction", ha='center', va='center')
+            plt.axis("off")
+            return plt.gcf()
+    
+        class_names = ['Immune', 'Other', 'Stromal', 'Tumour']
+        class_colors = {
+            0: "#2ca02c",  # Immune
+            1: "#ff7f0e",  # Other
+            2: "#1f77b4",  # Stromal
+            3: "#d62728",  # Tumour
+        }
+    
+        plt.figure(figsize=(10, 6))
+        color_matrix = np.vectorize(class_colors.get)(preds)
+        for i in range(preds.shape[0]):
+            for j in range(preds.shape[1]):
+                plt.gca().add_patch(plt.Rectangle((j, i), 1, 1, color=class_colors[preds[i, j]]))
+                plt.text(j + 0.5, i + 0.5, class_names[preds[i, j]][0], ha='center', va='center', color='white', fontsize=10)
+    
+        plt.xticks(np.arange(len(blur_sizes)) + 0.5, blur_sizes)
+        plt.yticks(np.arange(len(noise_levels)) + 0.5, noise_levels)
+        plt.gca().invert_yaxis()
+        plt.gca().set_xticks(np.arange(len(blur_sizes)), minor=True)
+        plt.gca().set_yticks(np.arange(len(noise_levels)), minor=True)
+        plt.grid(True, which='minor', color='gray', linewidth=0.5)
+        plt.xlabel("Blur Size")
+        plt.ylabel("Noise Level")
+        plt.title(f"Prediction Heatmap ({model_name})")
+    
+        # Add manual legend
+        handles = [plt.Rectangle((0, 0), 1, 1, color=class_colors[i]) for i in range(4)]
+        # plt.legend(handles, class_names, loc='upper center', bbox_to_anchor=(0.5, -0.08), ncol=4, frameon=False)
+    
+        # Set ticks centered in each cell
+        plt.xticks(np.arange(len(blur_sizes)) + 0.5, blur_sizes)
+        plt.yticks(np.arange(len(noise_levels)) + 0.5, noise_levels)
+        
+        # Expand the axes limits so the last column isn't cut off
+        plt.xlim(0, len(blur_sizes))
+        plt.ylim(0, len(noise_levels))
+        
+        # Flip y-axis for correct orientation
+        plt.gca().invert_yaxis()
+
+        plt.tight_layout()
+        return plt.gcf()
 
     # === Image Outputs ===
     @output
@@ -829,5 +959,3 @@ def server(input, output, session):
         
 from pathlib import Path
 app = App(app_ui, server)
-
-
