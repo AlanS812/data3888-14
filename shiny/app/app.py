@@ -13,6 +13,9 @@ from torchvision import models
 import torch.nn as nn
 import evaluation
 
+##
+from matplotlib.colors import LinearSegmentedColormap
+
 # Load once
 pca = joblib.load("Base_pca.joblib")
 xgb_model = xgb.XGBClassifier()
@@ -128,7 +131,7 @@ immune_labels = [
     "Macrophages_1.png", "Macrophages_2.png", "LAMP3+_DCs.png", "IRF7+_DCs.png"
 ]
 
-stromal_like_labels = [
+stromal_like_labels = [ # Stromal, also Pre-Tumour
     "Stromal.png", "Stromal_and_T_Cell_Hybrid.png", "Perivascular-Like.png"
 ]
 
@@ -142,24 +145,34 @@ app_ui = ui.page_navbar(
     ui.nav_panel(
         "Welcome",
         ui.div(
-            ui.h2("Welcome to the Image Classification App"),
-            ui.p("This app shows performance of different models trained on medical image data."),
-            ui.p("You can select different image augmentations and compare model results.")
+            ui.h2("Breast Cancer Cell Classification"),
+            ui.p(
+                "This app allows users to explore how different machine learning and deep learning models "
+                "perform on breast cancer cell images, especially under varying image quality conditions such as blur and noise."
+            ),
+            ui.p(
+                "It includes examples of class cell groupings, interactive visualisations of model performance, confidence, and stability, "
+                "and the ability to test your own images against the trained models."
+            ),
+            ui.p(
+                "Use the navigation tabs above to view overall model trends, per-class breakdowns, and individual predictions."
+            ),
+            ui.output_image("welcome_image"),
+            ui.em("Original H&E-stained breast tissue slide used to generate the cell images classified in this project."),
+            style="max-width: 900px; margin: auto; padding: 2rem;"
         )
     ),
 
-      ui.nav_panel(
+    ui.nav_panel(
         "Model Results",
         ui.div(
     
-            # === AUGMENTATION + IMAGE PANEL (unchanged) ===
+            # === AUGMENTATION + IMAGE PANEL ===
             ui.div(
-                # Augmentation selectors
                 ui.div(
-                  ui.card(
-                    ui.h4("Example Cell Images"),
-                    ui.p("Use the dropdowns to explore example images for cells in each group."),
-
+                    ui.card(
+                        ui.h4("Example Cell Images"),
+                        ui.p("Use the dropdowns to explore example images for cells in each group."),
                         ui.h4("Augmentations"),
                         ui.layout_columns(
                             ui.div(
@@ -172,16 +185,8 @@ app_ui = ui.page_navbar(
                             )
                         )
                     ),
-
-                    #ui.card(
-                       # ui.h4("Augmentation"),
-                       # ui.input_radio_buttons("blur", "Blur Level", choices=blur_levels, inline=False),
-                       # ui.input_radio_buttons("noise", "Noise Level", choices=noise_levels, inline=False)
-                    #),
                     style="width: 25%; padding-right: 1rem;"
                 ),
-    
-                # Image display cards
                 ui.div(
                     *[
                         ui.card(
@@ -196,7 +201,7 @@ app_ui = ui.page_navbar(
                                     "",
                                     choices={label: label.replace(".png", "").replace("_", " ") for label in label_list}
                                 ),
-                                style="display: flex; flex-direction: column; align-items: center; gap: 1rem; justify-content: flex-start;"
+                                style="display: flex; flex-direction: column; align-items: center; gap: 0.5rem; justify-content: flex-start;"
                             ),
                             style="flex: 1 1 22%; min-width: 200px;"
                         )
@@ -207,49 +212,43 @@ app_ui = ui.page_navbar(
                             ("Other Cells", "nonstromal_img", "nonstromal_cell", non_stromal_other_labels),
                         ]
                     ],
-                    style="width: 75%; display: flex; flex-wrap: nowrap; gap: 1rem; justify-content: space-between;"
+                    style="width: 75%; display: flex; flex-wrap: nowrap; gap: 0.5rem; justify-content: space-between;"
                 ),
-                style="display: flex;"
+                style="display: flex; margin-bottom: 0.5rem;"
             ),
     
-            # === METRIC TOGGLE + DYNAMIC PLOT + PLACEHOLDER LINE GRAPH ===
+            # === METRIC TOGGLE ROW ===
             ui.div(
-                ui.layout_columns(
-                   ui.card(
-                      ui.h4("Bar Plots"),
-                      ui.input_radio_buttons(
-                          "line_metric",
-                          "Metric",
-                          choices=["Accuracy", "Precision", "Recall", "F1 Score"],
-                          selected="F1 Score",
-                          inline=True
-                      ),
-                      ui.output_plot("selected_metric_plot"),  # Plot changes based on toggle
-                      width=6
+                ui.card(
+                    #ui.h4("Select Metric to View"),
+                    ui.input_radio_buttons(
+                        "line_metric",
+                        "Metric",
+                        choices=["Accuracy", "Precision", "Recall", "F1 Score"],
+                        inline=True
                     ),
-                    ui.card(
-                      ui.h4("Line Plot"),
-                  
-                        ui.input_radio_buttons(
-                            "fixed_aug",
-                            "Vary Across:",
-                            choices=["Blur", "Noise"],
-                            selected="Noise",
-                            inline=True
-                        ),
-                
-                      # 4. The dynamic line plot
-                      ui.output_plot("line_metric_plot")
-                  )
+                    style="padding: 0.5rem; margin: 0;"
                 ),
-                style="margin-top: 0.5rem;"
+                style="margin-bottom: 1rem;"
             ),
     
-            # === ADDITIONAL PLOTS BELOW ===
-            #ui.layout_columns(
-            #    ui.card(ui.h4("Average Confidence"), ui.output_plot("confidence_plot"), width=6),
-            #    ui.card(ui.h4("Training and Validation"), ui.output_plot("deep_plot"), width=6)
-            #)
+            # === PLOTS ===
+            ui.layout_columns(
+                ui.card(
+                    ui.output_plot("selected_metric_plot"),
+                    width=6
+                ),
+                ui.card(
+                    ui.input_radio_buttons(
+                        "fixed_aug",
+                        "Vary Across:",
+                        choices=["Blur", "Noise"],
+                        selected="Noise",
+                        inline=True
+                    ),
+                    ui.output_plot("line_metric_plot")
+                )
+            )
         )
     ),
     
@@ -275,10 +274,10 @@ app_ui = ui.page_navbar(
           ui.div([
               ui.card(
                   ui.div([
-                      ui.h4("Cell Group", style="font-size: 1.1rem; font-weight: 600;"),
-                      ui.input_radio_buttons("selected_class", "", choices=["Tumour", "Immune", "Stromal", "Other"], selected="Tumour", inline=False),
-                      ui.h4("Metric", style="font-size: 1.1rem; font-weight: 600;"),
-                      ui.input_radio_buttons("heatmap_metric", "", choices=["Precision", "Recall", "Confidence"], selected="Precision", inline=False),
+                      #ui.h4("Cell Group", style="font-size: 1.1rem; font-weight: 600;"),
+                      ui.input_radio_buttons("selected_class", "Cell Group", choices=["Tumour", "Immune", "Stromal", "Other"], selected="Tumour", inline=False),
+                      #ui.h4("Metric", style="font-size: 1.1rem; font-weight: 600;"),
+                      ui.input_radio_buttons("heatmap_metric", "Metric", choices=["Precision", "Recall", "Confidence"], selected="Precision", inline=False),
                   ]),
                   style="flex: 0.75;"
               ),
@@ -310,7 +309,7 @@ app_ui = ui.page_navbar(
       )
     ),
 
-    title="Image Model Dashboard"
+    title="Model Dashboard"
 )
 
 def server(input, output, session):
@@ -435,33 +434,6 @@ def server(input, output, session):
             plt.text(bar.get_x() + bar.get_width() / 2, val + 0.01, f"{val:.2f}", ha='center')
     
         plt.ylim(0, min(1.0, max(subset["f1"].max() + 0.05, 0.1)))
-        plt.tight_layout()
-        return plt.gcf()
-
-    @output
-    @render.plot
-    def confidence_plot():
-        subset = get_filtered_df()
-    
-        if subset.empty:
-            plt.figure()
-            plt.text(0.5, 0.5, "No data for selected settings", ha='center', va='center')
-            plt.axis("off")
-            return plt.gcf()
-    
-        subset = subset.sort_values("avg_conf", ascending=False)
-        colors = [model_colors.get(label, "#cccccc") for label in subset["Model_Label"]]
-    
-        plt.figure(figsize=(6, 5))
-        bars = plt.bar(subset["Model_Label"], subset["avg_conf"], color=colors)
-        plt.ylabel("Average Confidence")
-        plt.xticks(rotation=45, ha="right")
-        plt.title("Confidence by Model")
-    
-        for bar, val in zip(bars, subset["avg_conf"]):
-            plt.text(bar.get_x() + bar.get_width() / 2, val + 0.01, f"{val:.0%}", ha='center')
-    
-        plt.ylim(0, min(1.0, max(subset["avg_conf"].max() + 0.05, 0.1)))
         plt.tight_layout()
         return plt.gcf()
           
@@ -605,7 +577,13 @@ def server(input, output, session):
         pivot = subset.pivot(index="blur_size", columns="noise_level", values=col)
     
         plt.figure(figsize=(8, 5))
-        plt.imshow(pivot, cmap="YlOrRd", vmin=0, vmax=1, aspect="auto", origin="lower")
+        
+        base_color = class_colors[input.selected_class()]  # e.g., "#d62728" for Tumour
+      # Create a gradient colormap from white to the base color
+        cmap = LinearSegmentedColormap.from_list("custom", ["#ffffff", base_color])
+        plt.imshow(pivot, cmap=cmap, vmin=0, vmax=1, aspect="auto", origin="lower")
+
+        #plt.imshow(pivot, cmap="YlOrRd", vmin=0, vmax=1, aspect="auto", origin="lower")
     
         plt.title(f"{metric.capitalize()} (%) for {class_name.capitalize()} — {model}")
         plt.xlabel("Noise")
@@ -617,7 +595,7 @@ def server(input, output, session):
             for j, noise_val in enumerate(pivot.columns):
                 value = pivot.loc[blur_val, noise_val]
                 if not pd.isna(value):
-                    plt.text(j, i, f"{value * 100:.0f}%", ha="center", va="center", color="black")
+                    plt.text(j, i, f"{value * 100:.0f}", ha="center", va="center", color="black")
     
         plt.tight_layout()
         return plt.gcf()
@@ -768,7 +746,7 @@ def server(input, output, session):
         else:
             means = [subset[f"{metric}_{cls}"].values[0] for cls in class_order]
             stds = None
-            ylabel = f"{metric.capitalize()} Per Class"
+            ylabel = f"{metric.capitalize()}"
     
         colors = [class_colors[cls.capitalize()] for cls in class_order]
     
@@ -776,7 +754,7 @@ def server(input, output, session):
         bars = plt.bar(display_order, means, yerr=stds if stds else None, color=colors, capsize=5)
         plt.ylim(0, max(np.array(means) + (np.array(stds) if stds else 0)) + 0.1)
         plt.ylabel(ylabel)
-        plt.title(f"{model} — {metric.capitalize()} by Class")
+        plt.title(f"{metric.capitalize()} by Class — {model}")
     
         for i, v in enumerate(means):
             offset = stds[i] if stds else 0
@@ -791,15 +769,13 @@ def server(input, output, session):
         import ast
         from sklearn.metrics import ConfusionMatrixDisplay
     
-        model = input.selected_model().strip().lower()
+        model_raw = input.selected_model()                
+        model = model_raw.strip().lower()                
         blur = int(input.cm_blur())
-        noise = float(input.cm_noise())
+        #noise = float(input.cm_noise())
+        noise = int(input.cm_noise())
+        #class_name = input.selected_class().lower()
     
-       # row = df[
-            #(df["Model_Label"] == model) &
-            #(df["blur_size"] == blur) &
-            #(df["noise_level"] == noise)
-        #]
         row = df[
             (df["Model_Label"].str.strip().str.lower() == model) &
             (df["blur_size"] == blur) &
@@ -820,12 +796,26 @@ def server(input, output, session):
             plt.axis("off")
             return plt.gcf()
     
-        labels = ["Tumour", "Immune", "Stromal", "Other"]
-        disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=labels)
+        #labels = ["Immune", "Other", "Stromal", "Tumour"]
+        #disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=labels)
+        
+        # Flip x-axis (columns): [Tumour, Stromal, Other, Immune]
+        col_order = [3, 2, 1, 0]
+        cm = cm[:, col_order]  # reorder columns
+        x_labels = ["Tumour", "Stromal", "Other", "Immune"]
+        y_labels = ["Immune", "Other", "Stromal", "Tumour"]  # unchanged
+        
     
+        #fig, ax = plt.subplots(figsize=(6, 6))
+        #disp.plot(ax=ax, cmap="Blues", values_format="d", colorbar=False)
+        #plt.title(f"Confusion Matrix — {model_raw} (Blur {blur}, Noise {noise})")
+        
         fig, ax = plt.subplots(figsize=(6, 6))
+        disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=x_labels)
         disp.plot(ax=ax, cmap="Blues", values_format="d", colorbar=False)
-        plt.title(f"Confusion Matrix — {model} (Blur {blur}, Noise {noise})")
+        ax.set_yticklabels(y_labels)
+        plt.title(f"Confusion Matrix — {model_raw} (Blur {blur}, Noise {noise})")
+        
         return fig
       
     @output
@@ -955,6 +945,16 @@ def server(input, output, session):
             "alt": "Non-Stromal Cell Image",
             "width": "100%",
             "height": "60%"
+        }
+        
+    @output
+    @render.image
+    def welcome_image():
+        return {
+            "src": "imageslide.png",
+            "alt": "Tissue Slide",
+            "width": "60%",
+            "height": "auto"
         }
         
 from pathlib import Path
