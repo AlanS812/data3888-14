@@ -102,31 +102,33 @@ def test_augmented_xgboost():
                 print(f"Test set {test_num}: Blur {blur_size}, Noise Level {noise_level}, Accuracy {accuracy}")
 
 
+imagenet_normalize = transforms.Normalize(
+  mean=[0.485, 0.456, 0.406],
+  std =[0.229, 0.224, 0.225],
+)
+
 def apply_augmentations(images, blur_size, noise_level):
-    '''
-    Augmentation function for tensorflow 
-    '''
+    # early exit if no aug
     if blur_size == 0 and noise_level == 0:
-        return images
-    aug_images = []
-    for img in images:
-        # Convert to numpy array
-        img_np = img.permute(1, 2, 0).cpu().numpy()
-        
-        # Apply blur
-        if blur_size > 0:
-            img_np = cv2.GaussianBlur(img_np, (blur_size, blur_size), 0)
-        
-        # Apply noise
-        if noise_level > 0:
-            noise = np.random.normal(0, noise_level, img_np.shape).astype(np.float32)
-            img_np = np.clip(img_np + noise, 0, 255)
-        
-        # Convert back to tensor
-        img_tensor = torch.from_numpy(img_np.transpose(2, 0, 1)).float()
-        aug_images.append(img_tensor)
+        # convert 0–255 cpu tensors into normalized floats
+        return imagenet_normalize(images.float().div(255.0))
     
-    return torch.stack(aug_images)
+    aug_images = []
+    for img in images:                       # img is C×H×W on CPU
+        # to H×W×C uint8
+        img_np = img.permute(1,2,0).cpu().numpy().astype(np.uint8)
+
+        if blur_size > 0:
+            img_np = cv2.GaussianBlur(img_np, (blur_size,blur_size), 0)
+        if noise_level > 0:
+            noise   = np.random.normal(0, noise_level, img_np.shape)
+            img_np  = np.clip(img_np + noise, 0, 255).astype(np.uint8)
+
+        # back to float tensor in [0,1]
+        t = torch.from_numpy(img_np.transpose(2,0,1)).float().div(255.0)
+        aug_images.append(imagenet_normalize(t))
+
+    return torch.stack(aug_images).to(images.device)
 
 def test_augmented_resnet():
 # Load datasets
