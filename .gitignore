@@ -56,7 +56,7 @@ rsconnect/
 archive
 data
 __pycache__
-.ipynb_checkpoints
+.ipynb_checkpoints/
 shiny_app/
 .Rproj.user/
 __pycache__/
