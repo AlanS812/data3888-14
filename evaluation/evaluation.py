@@ -31,7 +31,8 @@ def test_augmented_xgboost():
     noise_levels = [0,1,3,5,10,20,30]
 
      # Init csv
-    csv_file = 'xgboost_augmented_metrics.csv'
+    #csv_file = 'xgboost_augmented_metrics.csv'
+    csv_file = '../metrics/xgboost_augmented_metrics.csv' # pipeline adjustment
     with open(csv_file, 'w', newline='') as f:
         writer = csv.writer(f)
         writer.writerow([
@@ -151,7 +152,8 @@ def test_augmented_resnet():
     noise_levels = [0,1,3,5,10,20,30]
 
     # Init csv
-    csv_file = 'resnet50_augmented_metrics.csv'
+    #csv_file = 'resnet50_augmented_metrics.csv'
+    csv_file = '../metrics/resnet50_augmented_metrics.csv' # pipeline adjustment
     test_datasets = [test_dataset1, test_dataset2, test_dataset3]
     test_set_names = ['1', '2', '3']
     with open(csv_file, 'w', newline='') as f:
@@ -256,7 +258,8 @@ def test_augmented_cnn():
     noise_levels = [0,1,3,5,10,20,30]
 
     # Init csv
-    csv_file = 'cnn_original_augmented_metrics.csv'
+    #csv_file = 'cnn_original_augmented_metrics.csv'
+    csv_file = '../metrics/cnn_original_augmented_metrics.csv' # pipeline adjustment
     with open(csv_file, 'w', newline='') as f:
         writer = csv.writer(f)
         writer.writerow([

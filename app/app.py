@@ -2,6 +2,7 @@ from shiny import App, ui, render, req
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import os # ADDED
 from PIL import Image, ImageEnhance, ImageFilter
 import seaborn as sns
 import data_preprocessing
@@ -84,22 +85,12 @@ def predict_resnet(img, model):
                 preds[i, j] = torch.argmax(torch.softmax(outputs, dim=1), dim=1).item()
     return preds, blur_sizes, noise_levels
 
-# Shiny justification (notes)
-#Class imbalance and bias: In medical imaging, models often perform unevenly across classes. 
-#Tumour cells may dominate, causing models to over-prioritize them at the expense of immune 
-#or stromal types. Per-class metrics reveal these biases.
-
-#Clinical interpretability: It’s critical to know not just if a model performs well overall, 
-#but where it fails. An oncologist might care more about detecting immune cells than “other” 
-#types, so per-class insights help prioritize model trust.
-
-#Robustness to degradation: Your augmentations simulate real-world noise (blurring, 
-#scanning artifacts). Some cell types might degrade in distinct ways — e.g., tumour 
-#cells may remain detectable under blur, while immune cells vanish into noise. 
-#Per-class degradation sensitivity matters.
-
 #df = pd.read_csv("results.csv")
-df = pd.read_csv("combined_results_100.csv")
+#df = pd.read_csv("combined_results_100.csv")
+
+# Path relative to app.py inside shiny_app/
+csv_path = os.path.join("..", "metrics", "combined_app_metrics.csv")
+df = pd.read_csv(csv_path)
 
 # defining augmentations
 blur_levels = [0, 1, 3, 5, 7, 9, 19] 
