@@ -4,7 +4,7 @@ import pandas as pd
 from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score, confusion_matrix
 import joblib
 import os
-import shiny_data
+import data_preprocessing
 import csv
 import torch
 from torch.utils.data import Dataset, DataLoader
@@ -17,7 +17,7 @@ from PIL import Image, ImageFilter
 
 def test_augmented_xgboost():
     # Load test sets
-    _, _, X_test1, X_test2, X_test3, _, _, y_test1, y_test2, y_test3 = shiny_data.load_split_images()
+    _, _, X_test1, X_test2, X_test3, _, _, y_test1, y_test2, y_test3 = data_preprocessing.load_split_images()
 
     # PCA
     pca = joblib.load('Base_pca.joblib')
@@ -52,7 +52,7 @@ def test_augmented_xgboost():
         for noise_level in noise_levels:
             for blur_size in blur_sizes:
                 # Apply augmentations + flatten + pca
-                X_test_aug = shiny_data.apply_noise(shiny_data.apply_blur(X_test, blur_size), std=noise_level)
+                X_test_aug = data_preprocessing.apply_noise(data_preprocessing.apply_blur(X_test, blur_size), std=noise_level)
                 X_test_aug_flat = X_test_aug.reshape(X_test_aug.shape[0], -1)
                 X_test_aug_pca = pca.transform(X_test_aug_flat)
 
@@ -135,7 +135,7 @@ def apply_augmentations(images, blur_size, noise_level):
 
 def test_augmented_resnet():
 # Load datasets
-    train_dataset, val_dataset, test_dataset1, test_dataset2, test_dataset3 = shiny_data.get_original()
+    train_dataset, val_dataset, test_dataset1, test_dataset2, test_dataset3 = data_preprocessing.get_original()
 
     # Set up model
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -246,7 +246,7 @@ def test_augmented_resnet():
 def test_augmented_cnn():
 
     #load in test sets
-    _, _, X_test1, X_test2, X_test3, _, _, y_test1, y_test2, y_test3 = shiny_data.load_split_images()
+    _, _, X_test1, X_test2, X_test3, _, _, y_test1, y_test2, y_test3 = data_preprocessing.load_split_images()
 
     # Load model
     model = load_model('cnn_original.h5')
@@ -278,7 +278,7 @@ def test_augmented_cnn():
             for blur_size in blur_sizes:
 
                 # Apply augmentations
-                X_test_aug = shiny_data.apply_noise(shiny_data.apply_blur(X_test, blur_size), std=noise_level)
+                X_test_aug = data_preprocessing.apply_noise(data_preprocessing.apply_blur(X_test, blur_size), std=noise_level)
 
                 # Predict
                 y_pred_probs = model.predict(X_test_aug)
