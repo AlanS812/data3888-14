@@ -57,3 +57,7 @@ archive
 data
 __pycache__
 .ipynb_checkpoints
+shiny_app/
+.Rproj.user/
+__pycache__/
+.vscode/
