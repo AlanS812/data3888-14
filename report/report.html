@@ -3110,8 +3110,9 @@ vertical-align: -.125em;
   <li><a href="#background" id="toc-background" class="nav-link" data-scroll-target="#background"><span class="header-section-number">2</span> Background</a></li>
   <li><a href="#method" id="toc-method" class="nav-link" data-scroll-target="#method"><span class="header-section-number">3</span> Method</a></li>
   <li><a href="#results" id="toc-results" class="nav-link" data-scroll-target="#results"><span class="header-section-number">4</span> Results</a></li>
-  <li><a href="#discussion" id="toc-discussion" class="nav-link" data-scroll-target="#discussion"><span class="header-section-number">5</span> Discussion</a></li>
-  <li><a href="#conclusion" id="toc-conclusion" class="nav-link" data-scroll-target="#conclusion"><span class="header-section-number">6</span> Conclusion</a></li>
+  <li><a href="#application-development" id="toc-application-development" class="nav-link" data-scroll-target="#application-development"><span class="header-section-number">5</span> Application Development</a></li>
+  <li><a href="#discussion" id="toc-discussion" class="nav-link" data-scroll-target="#discussion"><span class="header-section-number">6</span> Discussion</a></li>
+  <li><a href="#conclusion" id="toc-conclusion" class="nav-link" data-scroll-target="#conclusion"><span class="header-section-number">7</span> Conclusion</a></li>
   </ul>
 </nav>
 </div>
@@ -3209,13 +3210,20 @@ vertical-align: -.125em;
 </div>
 </div>
 </section>
-<section id="discussion" class="level1" data-number="5">
-<h1 data-number="5"><span class="header-section-number">5</span> Discussion</h1>
+<section id="application-development" class="level1" data-number="5">
+<h1 data-number="5"><span class="header-section-number">5</span> Application Development</h1>
+<p>The application is designed to complement the real-world workflows of medical imaging professionals and diagnosticians, where visual assessment is central. By pairing augmented images with model performance metrics, it bridges the gap between human judgement and machine classification, supporting interdisciplinary decision-making. The backend integrates two key pipelines: a pre-computed (but dynamically updatable) metrics pipeline, and pre-trained models that allow new predictions from user-uploaded images.</p>
+<p>Page 1 displays example cell images from each class under user-selected blur and noise levels, alongside graphical performance summaries to allow quick model comparison under the augmentations applied.</p>
+<p>Page 2 provides per-model class-level performance, including confidence and confusion matrices, supporting evaluation of model reliability and cell-type-specific performance as required.</p>
+<p>Page 3 allows users to upload an image and view predictions across all augmentation combinations, helping assess model behaviour under novel, real-world image conditions.</p>
+</section>
+<section id="discussion" class="level1" data-number="6">
+<h1 data-number="6"><span class="header-section-number">6</span> Discussion</h1>
 <p>Some limitations of the experiment are that it is specific to blurring and noise type image degradation in the context of breast tissue slides. Different tasks may have different image quality issues, or image characteristics that may alter model performance. Further, we applied blur to the entire image, where in practice it may be more localised, or have varying levels of intensity throughout the image. Further work to mitigate these issues would include exploring quality issues in different contexts and experimenting on those specific domains, or using a randomised blur approach in this context.</p>
 <p>Regarding model development practice, the training set was relatively low due to computational constraints, so increasing the training size may give better or potentially more robust results for deep learning models. Additionally, it would be interesting to examine whether using reconstructed PCA transformed images to train and test deep learning models could balance their high accuracy and robustness to augmentation.</p>
 </section>
-<section id="conclusion" class="level1" data-number="6">
-<h1 data-number="6"><span class="header-section-number">6</span> Conclusion</h1>
+<section id="conclusion" class="level1" data-number="7">
+<h1 data-number="7"><span class="header-section-number">7</span> Conclusion</h1>
 <p>[TODO]</p>
 <!-- -->
 
@@ -3865,15 +3873,26 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
 <span id="cb1-107"><a href="#cb1-107" aria-hidden="true" tabindex="-1"></a>RF will rarely predict ‘other’, goes toward tumour and stromal and stops predicting immune.</span>
 <span id="cb1-108"><a href="#cb1-108" aria-hidden="true" tabindex="-1"></a>:::</span>
 <span id="cb1-109"><a href="#cb1-109" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-110"><a href="#cb1-110" aria-hidden="true" tabindex="-1"></a><span class="fu"># Discussion</span></span>
+<span id="cb1-110"><a href="#cb1-110" aria-hidden="true" tabindex="-1"></a><span class="fu"># Application Development</span></span>
 <span id="cb1-111"><a href="#cb1-111" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-112"><a href="#cb1-112" aria-hidden="true" tabindex="-1"></a>Some limitations of the experiment are that it is specific to blurring and noise type image degradation in the context of breast tissue slides. Different tasks may have different image quality issues, or image characteristics that may alter model performance. Further, we applied blur to the entire image, where in practice it may be more localised, or have varying levels of intensity throughout the image. Further work to mitigate these issues would include exploring quality issues in different contexts and experimenting on those specific domains, or using a randomised blur approach in this context. </span>
-<span id="cb1-113"><a href="#cb1-113" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-114"><a href="#cb1-114" aria-hidden="true" tabindex="-1"></a>Regarding model development practice, the training set was relatively low due to computational constraints, so increasing the training size may give better or potentially more robust results for deep learning models. Additionally, it would be interesting to examine whether using reconstructed PCA transformed images to train and test deep learning models could balance their high accuracy and robustness to augmentation.</span>
-<span id="cb1-115"><a href="#cb1-115" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-116"><a href="#cb1-116" aria-hidden="true" tabindex="-1"></a><span class="fu"># Conclusion</span></span>
-<span id="cb1-117"><a href="#cb1-117" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-118"><a href="#cb1-118" aria-hidden="true" tabindex="-1"></a><span class="co">[</span><span class="ot">TODO</span><span class="co">]</span></span></code><button title="Copy to Clipboard" class="code-copy-button" data-in-quarto-modal><i class="bi"></i></button></pre></div>
+<span id="cb1-112"><a href="#cb1-112" aria-hidden="true" tabindex="-1"></a>The application is designed to complement the real-world workflows of medical imaging professionals and diagnosticians, where visual assessment is central. By pairing augmented images with model performance metrics, it bridges the gap between human judgement and machine classification, supporting interdisciplinary decision-making.</span>
+<span id="cb1-113"><a href="#cb1-113" aria-hidden="true" tabindex="-1"></a>The backend integrates two key pipelines: a pre-computed (but dynamically updatable) metrics pipeline, and pre-trained models that allow new predictions from user-uploaded images.</span>
+<span id="cb1-114"><a href="#cb1-114" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-115"><a href="#cb1-115" aria-hidden="true" tabindex="-1"></a>Page 1 displays example cell images from each class under user-selected blur and noise levels, alongside graphical performance summaries to allow quick model comparison under the augmentations applied.</span>
+<span id="cb1-116"><a href="#cb1-116" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-117"><a href="#cb1-117" aria-hidden="true" tabindex="-1"></a>Page 2 provides per-model class-level performance, including confidence and confusion matrices, supporting evaluation of model reliability and cell-type-specific performance as required.</span>
+<span id="cb1-118"><a href="#cb1-118" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-119"><a href="#cb1-119" aria-hidden="true" tabindex="-1"></a>Page 3 allows users to upload an image and view predictions across all augmentation combinations, helping assess model behaviour under novel, real-world image conditions.</span>
+<span id="cb1-120"><a href="#cb1-120" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-121"><a href="#cb1-121" aria-hidden="true" tabindex="-1"></a><span class="fu"># Discussion</span></span>
+<span id="cb1-122"><a href="#cb1-122" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-123"><a href="#cb1-123" aria-hidden="true" tabindex="-1"></a>Some limitations of the experiment are that it is specific to blurring and noise type image degradation in the context of breast tissue slides. Different tasks may have different image quality issues, or image characteristics that may alter model performance. Further, we applied blur to the entire image, where in practice it may be more localised, or have varying levels of intensity throughout the image. Further work to mitigate these issues would include exploring quality issues in different contexts and experimenting on those specific domains, or using a randomised blur approach in this context. </span>
+<span id="cb1-124"><a href="#cb1-124" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-125"><a href="#cb1-125" aria-hidden="true" tabindex="-1"></a>Regarding model development practice, the training set was relatively low due to computational constraints, so increasing the training size may give better or potentially more robust results for deep learning models. Additionally, it would be interesting to examine whether using reconstructed PCA transformed images to train and test deep learning models could balance their high accuracy and robustness to augmentation.</span>
+<span id="cb1-126"><a href="#cb1-126" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-127"><a href="#cb1-127" aria-hidden="true" tabindex="-1"></a><span class="fu"># Conclusion</span></span>
+<span id="cb1-128"><a href="#cb1-128" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-129"><a href="#cb1-129" aria-hidden="true" tabindex="-1"></a><span class="co">[</span><span class="ot">TODO</span><span class="co">]</span></span></code><button title="Copy to Clipboard" class="code-copy-button" data-in-quarto-modal><i class="bi"></i></button></pre></div>
 </div></div></div></div></div>
 </div> <!-- /content -->
 

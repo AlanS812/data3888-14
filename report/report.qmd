@@ -107,6 +107,17 @@ XGBoost ends up leaning towards tumour and immune
 RF will rarely predict ‘other’, goes toward tumour and stromal and stops predicting immune.
 :::
 
+# Application Development
+
+The application is designed to complement the real-world workflows of medical imaging professionals and diagnosticians, where visual assessment is central. By pairing augmented images with model performance metrics, it bridges the gap between human judgement and machine classification, supporting interdisciplinary decision-making.
+The backend integrates two key pipelines: a pre-computed (but dynamically updatable) metrics pipeline, and pre-trained models that allow new predictions from user-uploaded images.
+
+Page 1 displays example cell images from each class under user-selected blur and noise levels, alongside graphical performance summaries to allow quick model comparison under the augmentations applied.
+
+Page 2 provides per-model class-level performance, including confidence and confusion matrices, supporting evaluation of model reliability and cell-type-specific performance as required.
+
+Page 3 allows users to upload an image and view predictions across all augmentation combinations, helping assess model behaviour under novel, real-world image conditions.
+
 # Discussion
 
 Some limitations of the experiment are that it is specific to blurring and noise type image degradation in the context of breast tissue slides. Different tasks may have different image quality issues, or image characteristics that may alter model performance. Further, we applied blur to the entire image, where in practice it may be more localised, or have varying levels of intensity throughout the image. Further work to mitigate these issues would include exploring quality issues in different contexts and experimenting on those specific domains, or using a randomised blur approach in this context. 
