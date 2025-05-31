@@ -16,8 +16,9 @@ import csv
 from skimage.feature import hog
 import data_preprocessing
 
+#========HOG TRAINING==========
 def train_and_evaluate_xgboostHOG(folder='original'):
-    Xmat_train, Xmat_val, Xmat_test, y_train_enc, y_val_enc, y_test_enc = data_preprocessing.load_split_images()
+    Xmat_train, Xmat_val, _, _, _, y_train_enc, y_val_enc, _, _, _ = data_preprocessing.load_split_images()
 
     def extract_hog_features(images):
         hog_features = []
@@ -30,7 +31,7 @@ def train_and_evaluate_xgboostHOG(folder='original'):
         return np.array(hog_features)
 
     X_train_hog = extract_hog_features(Xmat_train)
-    X_test_hog = extract_hog_features(Xmat_test)
+    X_val_hog = extract_hog_features(Xmat_val)
 
     # Initialize and train XGBoost model
     xgb_model = xg.XGBClassifier(
@@ -51,62 +52,20 @@ def train_and_evaluate_xgboostHOG(folder='original'):
     xgb_model.fit(X_train_hog, y_train_enc)
     print("Finish training")
 
-    y_pred = xgb_model.predict(X_test_hog)
-    accuracy = accuracy_score(y_test_enc, y_pred)
-    f1 = f1_score(y_test_enc, y_pred, average='weighted')
-    precision_per_class = precision_score(y_test_enc, y_pred, average=None)
-    conf_matrix = confusion_matrix(y_test_enc, y_pred) 
+    y_pred = xgb_model.predict(X_val_hog)
+    accuracy = accuracy_score(y_val_enc, y_pred)
+    f1 = f1_score(y_val_enc, y_pred, average='weighted')
+    conf_matrix = confusion_matrix(y_val_enc, y_pred) 
 
-    # Write metrics to CSV
-    metrics_df = pd.DataFrame({
-        'Folder': [folder],
-        'Feature_Type': [PCA],
-        'Accuracy': [accuracy],
-        'F1_Score': [f1],
-        'Precision_Class_0': [precision_per_class[0]],
-        'Precision_Class_1': [precision_per_class[1]],
-        'Precision_Class_2': [precision_per_class[2]],
-        'Precision_Class_3': [precision_per_class[3]]
-    })
+    return xgb_model, accuracy, f1, conf_matrix
 
-    csv_file = 'xgboost_metrics.csv'
-    if not os.path.exists(csv_file):
-        metrics_df.to_csv(csv_file, index=False)
-    else:
-        metrics_df.to_csv(csv_file, mode='a', header=False, index=False)
-
-    return xgb_model, accuracy, f1
-
-    # Evaluate the model
-    y_pred = xgb_model.predict(X_test_hog)
-    accuracy = accuracy_score(y_test_enc, y_pred)
-    fprec = precision_score(y_test_enc, y_pred, average='weighted')
-    rec = recall_score(y_test_enc, y_pred, average='weighted')
-    cm = confusion_matrix(y_test_enc, y_pred)
-
-    # Print results
-    print(f"Folder: {folder}")
-    print(f"Training time: {training_time:.2f} seconds")
-    print(f"Accuracy: {accuracy:.2%}")
-    print(f"F1 Score: {f1:.2%}")
-
-    # Plot confusion matrix
-    plt.figure(figsize=(8, 6))
-    sns.heatmap(conf_matrix, annot=True, fmt='g', cmap='Blues', 
-                xticklabels=categories, yticklabels=categories)
-    plt.title(f'Confusion Matrix - {folder}')
-    plt.ylabel('True Label')
-    plt.xlabel('Predicted Label')
-    plt.savefig(f'{folder}_confusion_matrix.png')
-    plt.close()
-
-    return xgb_model, accuracy, f1
+#==========PCA TRAINING=========
 
 def train_and_evaluate_xgboostPCA(folder='original', n_components=100, save_pca=False, load_pca=True):
-    Xmat_train, Xmat_val, Xmat_test, y_train_enc, y_val_enc, y_test_enc = data_preprocessing.load_split_images()
+    Xmat_train, Xmat_val, _, _, _, y_train_enc, y_val_enc, _, _, _ = data_preprocessing.load_split_images()
 
     X_train_flat = Xmat_train.reshape(Xmat_train.shape[0], -1)
-    X_test_flat = Xmat_test.reshape(Xmat_test.shape[0], -1)
+    X_val_flat = Xmat_val.reshape(Xmat_val.shape[0], -1)
 
     pca_path = f'{folder}_pca.joblib'
     if load_pca and os.path.exists(pca_path):
@@ -118,7 +77,7 @@ def train_and_evaluate_xgboostPCA(folder='original', n_components=100, save_pca=
             joblib.dump(pca, pca_path)
 
     X_train_pca = pca.transform(X_train_flat)
-    X_test_pca = pca.transform(X_test_flat)
+    X_val_pca = pca.transform(X_val_flat)
 
     xgb_model = xg.XGBClassifier(
         objective='multi:softmax',
@@ -136,35 +95,16 @@ def train_and_evaluate_xgboostPCA(folder='original', n_components=100, save_pca=
     xgb_model.fit(X_train_pca, y_train_enc)
     print("Finish training")
 
-    xgb_model.save_model('xgboost.json')
+    xgb_model.save_model('models/xgboost.json')
 
-    y_pred = xgb_model.predict(X_test_pca)
-    accuracy = accuracy_score(y_test_enc, y_pred)
-    f1 = f1_score(y_test_enc, y_pred, average='weighted')
-    precision_per_class = precision_score(y_test_enc, y_pred, average=None)
-    conf_matrix = confusion_matrix(y_test_enc, y_pred) 
+    y_pred = xgb_model.predict(X_val_pca)
+    accuracy = accuracy_score(y_val_enc, y_pred)
+    f1 = f1_score(y_val_enc, y_pred, average='weighted')
+    conf_matrix = confusion_matrix(y_val_enc, y_pred) 
 
-    # Write metrics to CSV
-    metrics_df = pd.DataFrame({
-        'Folder': [folder],
-        'Feature_Type': 'PCA',
-        'Accuracy': [accuracy],
-        'F1_Score': [f1],
-        'Precision_Class_0': [precision_per_class[0]],
-        'Precision_Class_1': [precision_per_class[1]],
-        'Precision_Class_2': [precision_per_class[2]],
-        'Precision_Class_3': [precision_per_class[3]]
-    })
+    return xgb_model, accuracy, f1, conf_matrix
 
-    csv_file = 'xgboost_metrics.csv'
-    if not os.path.exists(csv_file):
-        metrics_df.to_csv(csv_file, index=False)
-    else:
-        metrics_df.to_csv(csv_file, mode='a', header=False, index=False)
-
-    return xgb_model, accuracy, f1
-
-train_and_evaluate_xgboostPCA(folder='Base', save_pca=True, load_pca=False)
+#======== HYPERPARAMETER OPTIMISATION======
 
 # def test_hyperparameters():
 #     # Define parameter ranges
@@ -217,5 +157,16 @@ train_and_evaluate_xgboostPCA(folder='Base', save_pca=True, load_pca=False)
 #                 print(f"Error with parameters {params}: {str(e)}")
 #                 continue
 
-# # Call the function
-# test_hyperparameters()
+#=============== RUN TRAINING  ============
+
+if __name__ == "__main__":
+    # Example usage: Train with HOG features
+    print("Running XGBoost with HOG features...")
+    hog_model, hog_acc, hog_f1 = train_and_evaluate_xgboostHOG(folder='original')
+    print(f"HOG Accuracy: {hog_acc:.4f} | F1: {hog_f1:.4f}")
+
+    # Example usage: Train with PCA features
+    print("Running XGBoost with PCA features...")
+    pca_model, pca_acc, pca_f1, pca_conf = train_and_evaluate_xgboostPCA(folder='original')
+    print(f"PCA Accuracy: {pca_acc:.4f} | F1: {pca_f1:.4f}")
+    print(pca_conf)

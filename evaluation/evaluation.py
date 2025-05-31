@@ -348,10 +348,5 @@ def test_augmented_cnn():
 
 if __name__ == "__main__":
     test_augmented_resnet()
-<<<<<<< HEAD
     # test_augmented_xgboost()
     # test_augmented_cnn()
-=======
-    #test_augmented_xgboost()
-    #test_augmented_cnn()
->>>>>>> 19207e7ab13b4b10161e97c7cd492ab7bd06b202
