@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 from PIL import Image, ImageEnhance, ImageFilter
 import seaborn as sns
-import shiny_data
+import data_preprocessing
 import torch
 from tensorflow.keras.models import load_model
 import xgboost as xgb
@@ -41,7 +41,7 @@ def predict_rf(img, pca, model):
     
     for i, noise in enumerate(noise_levels):
         for j, blur in enumerate(blur_sizes):
-            aug = shiny_data.apply_noise(shiny_data.apply_blur(img[np.newaxis, ...], blur), std=noise)
+            aug = data_preprocessing.apply_noise(data_preprocessing.apply_blur(img[np.newaxis, ...], blur), std=noise)
             aug_flat = aug.reshape(1, -1)
             aug_pca = pca.transform(aug_flat)
             preds[i, j] = model.predict(aug_pca)[0]
@@ -54,7 +54,7 @@ def predict_cnn(img, model):
     preds = np.empty((len(noise_levels), len(blur_sizes)), dtype=int)
     for i, noise in enumerate(noise_levels):
         for j, blur in enumerate(blur_sizes):
-            aug = shiny_data.apply_noise(shiny_data.apply_blur(img[np.newaxis, ...], blur), std=noise)
+            aug = data_preprocessing.apply_noise(data_preprocessing.apply_blur(img[np.newaxis, ...], blur), std=noise)
             y_probs = model.predict(aug)
             preds[i, j] = np.argmax(y_probs, axis=1)[0]
     return preds, blur_sizes, noise_levels
@@ -65,7 +65,7 @@ def predict_xgb(img, pca, model):
     preds = np.empty((len(noise_levels), len(blur_sizes)), dtype=int)
     for i, noise in enumerate(noise_levels):
         for j, blur in enumerate(blur_sizes):
-            aug = shiny_data.apply_noise(shiny_data.apply_blur(img[np.newaxis, ...], blur), std=noise)
+            aug = data_preprocessing.apply_noise(data_preprocessing.apply_blur(img[np.newaxis, ...], blur), std=noise)
             aug_flat = aug.reshape(1, -1)
             aug_pca = pca.transform(aug_flat)
             preds[i, j] = model.predict(aug_pca)[0]
@@ -903,7 +903,7 @@ def server(input, output, session):
             return plt.gcf()
     
         img_path = file[0]['datapath']
-        img = shiny_data.load_resize(img_path)
+        img = data_preprocessing.load_resize(img_path)
         model_name = input.selected_model_userinput()
     
         if model_name == "CNN":
