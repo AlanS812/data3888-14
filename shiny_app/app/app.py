@@ -218,18 +218,29 @@ app_ui = ui.page_navbar(
             ),
     
             # === METRIC TOGGLE ROW ===
-            ui.div(
-                ui.card(
+            #ui.div(
+                #ui.card(
                     #ui.h4("Select Metric to View"),
-                    ui.input_radio_buttons(
-                        "line_metric",
-                        "Metric",
-                        choices=["Accuracy", "Precision", "Recall", "F1 Score"],
-                        inline=True
-                    ),
-                    style="padding: 0.5rem; margin: 0;"
+                    #ui.input_radio_buttons(
+                        #"line_metric",
+                        #"Metric",
+                        #choices=["Accuracy", "Precision", "Recall", "F1 Score"],
+                        #inline=True
+                    #),
+                    #style="padding: 0.5rem; margin: 0;"
+                #),
+                #style="margin-bottom: 1rem;"
+            #),
+            
+            # === METRIC TOGGLE ROW (TIGHTENED) ===
+            ui.div(
+                ui.input_radio_buttons(
+                    "line_metric",
+                    "Metric",
+                    choices=["Accuracy", "Precision", "Recall", "F1 Score"],
+                    inline=True
                 ),
-                style="margin-bottom: 1rem;"
+                style="margin: 0; padding: 0.2rem 1rem 0.2rem 1rem;"
             ),
     
             # === PLOTS ===
@@ -253,66 +264,129 @@ app_ui = ui.page_navbar(
     ),
     
     ui.nav_panel(
-      "Per-Class Insights",
-      ui.div(
-        [
+        "Per-Class Insights",
+        ui.div([
+            # === ROW 1: Model Selector ===
+            ui.div(
+                ui.h4("Model Variant", style="font-size: 1.1rem; font-weight: 600;"),
+                ui.input_radio_buttons(
+                    "selected_model",
+                    "",
+                    choices=["RF (PCA)", "XGBoost (PCA)", "CNN", "ResNet"],
+                    selected="RF (PCA)",
+                    inline=True
+                ),
+                style="margin: 0; padding: 0.2rem 1rem 0.2rem 1rem;"
+            ),
     
-          # === ROW 1: Model Selector ===
-          ui.card(
-              ui.h4("Model Variant", style="font-size: 1.1rem; font-weight: 600;"),
-              ui.input_radio_buttons(
-                  "selected_model",
-                  "",
-                  choices=["RF (PCA)", "XGBoost (PCA)", "CNN", "ResNet"],
-                  selected="RF (PCA)",
-                  inline=True
-              ),
-              style="margin-bottom: 1rem;"
-          ),
+            # === ROW 2: Cell Group + Metric + Heatmap + Barplot ===
+            ui.div([
+                ui.card(
+                    ui.div([
+                        ui.input_radio_buttons("selected_class", "Cell Group", choices=["Tumour", "Immune", "Stromal", "Other"], selected="Tumour", inline=False),
+                        ui.input_radio_buttons("heatmap_metric", "Metric", choices=["Precision", "Recall", "Confidence"], selected="Precision", inline=False),
+                    ]),
+                    style="flex: 0.75;"
+                ),
+                ui.card(ui.output_plot("heatmap"), style="flex: 2.125;"),
+                ui.card(ui.output_plot("per_class_metric_plot"), style="flex: 2.125;"),
+            ], style="display: flex; gap: 1rem; margin-bottom: 0.2rem;"),
     
-          # === ROW 2: Cell Group + Metric + Heatmap + Barplot ===
-          ui.div([
-              ui.card(
-                  ui.div([
-                      #ui.h4("Cell Group", style="font-size: 1.1rem; font-weight: 600;"),
-                      ui.input_radio_buttons("selected_class", "Cell Group", choices=["Tumour", "Immune", "Stromal", "Other"], selected="Tumour", inline=False),
-                      #ui.h4("Metric", style="font-size: 1.1rem; font-weight: 600;"),
-                      ui.input_radio_buttons("heatmap_metric", "Metric", choices=["Precision", "Recall", "Confidence"], selected="Precision", inline=False),
-                  ]),
-                  style="flex: 0.75;"
-              ),
-              ui.card(ui.output_plot("heatmap"), style="flex: 2.125;"),
-              ui.card(ui.output_plot("per_class_metric_plot"), style="flex: 2.125;"),
-          ], style="display: flex; gap: 1rem; margin-bottom: 1rem;"),
-    
-          # === ROW 3: Confusion Matrix + Upload Prediction ===
-          ui.div([
-              ui.card(
-                  ui.div([
-                      ui.h4("Confusion Matrix Settings", style="font-size: 1.1rem; font-weight: 600;"),
-                      ui.input_radio_buttons("cm_blur", "Blur Level", choices=[0, 1, 3, 5, 7, 9, 19], selected=0, inline=False),
-                      ui.input_radio_buttons("cm_noise", "Noise Level", choices=[0, 1, 3, 5, 10, 20, 30], selected=0, inline=False),
-                  ]),
-                  style="flex: 0.75;"
-              ),
-              ui.card(ui.output_plot("confusion_matrix_plot"), style="flex: 2.125;"),
-              ui.card(
-                  ui.div([
-                      ui.h4("Upload Your Own Image", style="font-size: 1.1rem; font-weight: 600;"),
-                      ui.input_file("user_image", "Choose a PNG Image", accept=[".png"]),
-                      ui.output_plot("user_prediction_heatmap")
-                  ]),
-                  style="flex: 2.125;"
-              ),
-          ], style="display: flex; gap: 1rem;")
-        ]
-      )
+            # === ROW 3: Confusion Matrix Settings + Plot Side by Side ===
+            ui.div([
+                ui.card(
+                    ui.div([
+                        ui.h4("Confusion Matrix Settings", style="font-size: 1.1rem; font-weight: 600;"),
+                        ui.input_radio_buttons("cm_blur", "Blur Level", choices=[0, 1, 3, 5, 7, 9, 19], selected=0, inline=False),
+                        ui.input_radio_buttons("cm_noise", "Noise Level", choices=[0, 1, 3, 5, 10, 20, 30], selected=0, inline=False),
+                    ]),
+                    style="flex: 0.8;"
+                ),
+                ui.card(
+                    ui.output_plot("confusion_matrix_plot"),
+                    style="flex: 3;"
+                )
+            ], style="display: flex; gap: 1rem; margin-bottom: 1rem;")
+        ])
     ),
+    
+    ui.nav_panel(
+    "Upload & Predict",
+    ui.div([
+        ui.h4("Upload Your Own Image", style="font-size: 1.1rem; font-weight: 600;"),
+        ui.p("Select a model and upload a PNG image to view predictions across augmentations."),
+        ui.input_radio_buttons(
+            "selected_model_userinput",  # Reuse the same input or rename if you want this separate
+            "Model Variant",
+            choices=["RF (PCA)", "XGBoost (PCA)", "CNN", "ResNet"],
+            selected="RF (PCA)",
+            inline=True
+        ),
+        ui.input_file("user_image", "Choose a PNG Image", accept=[".png"]),
+        ui.output_plot("user_prediction_heatmap"),
+        ui.download_button("download_predictions", "Download Predictions CSV"),
+    ],
+    style="max-width: 900px; margin: auto; padding: 1.5rem;")
+  ),
 
     title="Model Dashboard"
 )
 
 def server(input, output, session):
+    cache = {}
+      
+    from datetime import datetime
+    import io
+    
+    @output
+    @render.download(filename="user_predictions.csv")
+    def download_predictions():
+        preds = cache.get("last_preds")
+        blur_sizes = cache.get("blur_sizes")
+        noise_levels = cache.get("noise_levels")
+        model_used = input.selected_model_userinput()
+    
+        if preds is None:
+            yield b"No predictions available. Please upload an image first."
+            return
+    
+        class_names = ['Immune', 'Other', 'Stromal', 'Tumour']
+    
+        # Convert prediction indices to class names
+        pred_labels = [[class_names[val] for val in row] for row in preds]
+    
+        # Flatten predictions into a long-form table
+        rows = []
+        for i, noise in enumerate(noise_levels):
+            for j, blur in enumerate(blur_sizes):
+                pred = class_names[preds[i][j]]
+                rows.append({
+                    "Noise Level": noise,
+                    "Blur Size": blur,
+                    "Predicted Class": pred,
+                    "Predicted Index": preds[i][j]
+                })
+    
+        df_out = pd.DataFrame(rows)
+    
+        # Add summary stats
+        counts = df_out["Predicted Class"].value_counts().to_dict()
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        metadata = {
+            "Model Used": model_used,
+            "Timestamp": timestamp,
+            **{f"Count: {cls}": counts.get(cls, 0) for cls in class_names}
+        }
+    
+        with io.StringIO() as s:
+            # Write metadata as header comment
+            for key, val in metadata.items():
+                s.write(f"# {key}: {val}\n")
+            s.write("\n")
+    
+            # Write the actual prediction table
+            df_out.to_csv(s, index=False)
+            yield s.getvalue().encode("utf-8")
 
     # Reusable helper function
     def plot_metric_bar(metric_name: str, title: str, ylabel: str):
@@ -830,7 +904,7 @@ def server(input, output, session):
     
         img_path = file[0]['datapath']
         img = shiny_data.load_resize(img_path)
-        model_name = input.selected_model()
+        model_name = input.selected_model_userinput()
     
         if model_name == "CNN":
             preds, blur_sizes, noise_levels = predict_cnn(img, cnn_model)
@@ -846,6 +920,13 @@ def server(input, output, session):
             plt.axis("off")
             return plt.gcf()
     
+        # Save to session for download
+        cache["last_preds"] = preds
+        cache["blur_sizes"] = blur_sizes
+        cache["noise_levels"] = noise_levels
+    
+        # (Plotting code unchanged...)
+    
         class_names = ['Immune', 'Other', 'Stromal', 'Tumour']
         class_colors = {
             0: "#2ca02c",  # Immune
@@ -854,7 +935,7 @@ def server(input, output, session):
             3: "#d62728",  # Tumour
         }
     
-        plt.figure(figsize=(10, 6))
+        plt.figure(figsize=(7, 5))
         color_matrix = np.vectorize(class_colors.get)(preds)
         for i in range(preds.shape[0]):
             for j in range(preds.shape[1]):
@@ -884,7 +965,7 @@ def server(input, output, session):
         plt.ylim(0, len(noise_levels))
         
         # Flip y-axis for correct orientation
-        plt.gca().invert_yaxis()
+        #plt.gca().invert_yaxis()
 
         plt.tight_layout()
         return plt.gcf()
