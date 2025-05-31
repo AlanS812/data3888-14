@@ -30,7 +30,7 @@ def test_augmented_xgboost():
     blur_sizes = [0,1,3,5,7,9,19]
     noise_levels = [0,1,3,5,10,20,30]
 
- # Init csv
+     # Init csv
     csv_file = 'xgboost_augmented_metrics.csv'
     with open(csv_file, 'w', newline='') as f:
         writer = csv.writer(f)

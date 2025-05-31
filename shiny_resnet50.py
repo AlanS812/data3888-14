@@ -17,7 +17,7 @@ import torch.nn as nn
 import torch.optim as optim
 import cv2
 
-import shiny_data
+import data_preprocessing
 
 
 # Train model
@@ -178,7 +178,7 @@ def main():
     num_epochs = 20
     batch_size = 64
     '''
-    train_dataset, val_dataset, test_dataset = shiny_data.get_original()
+    train_dataset, val_dataset, test_dataset = data_preprocessing.get_original()
     og_losses, og_accuracies = train_resnet50(train_dataset, val_dataset, batch_size, num_epochs, augmentation="original")
     og_accuracy, og_f1, og_precision, og_recall = eval_resnet50(test_dataset, batch_size, augmentation="original")
 
@@ -197,7 +197,7 @@ def main():
         f.write("\n")
     '''
     # Blur 50 augmented data
-    train_dataset, val_dataset, test_dataset = shiny_data.get_blurred_50()
+    train_dataset, val_dataset, test_dataset = data_preprocessing.get_blurred_50()
     blur50_losses, blur50_accuracies = train_resnet50(train_dataset, val_dataset, batch_size, num_epochs, augmentation="blur50")
     blur50_accuracy, blur50_f1, blur50_precision, blur50_recall = eval_resnet50(test_dataset, batch_size, augmentation="blur50")
 
@@ -216,7 +216,7 @@ def main():
         f.write("\n")
     '''
     # Blur 100 augmented data
-    train_dataset, val_dataset, test_dataset = shiny_data.get_blurred_100()
+    train_dataset, val_dataset, test_dataset = data_preprocessing.get_blurred_100()
     blur100_losses, blur100_accuracies = train_resnet50(train_dataset, val_dataset, batch_size, num_epochs, augmentation="blur100")
     blur100_accuracy, blur100_f1, blur100_precision, blur100_recall = eval_resnet50(test_dataset, batch_size, augmentation="blur100")
 
@@ -228,7 +228,7 @@ def main():
     print(f"blur100 Recall: {blur100_recall:.2f}")
 
     # Blur 150 augmented data
-    train_dataset, val_dataset, test_dataset = shiny_data.get_blurred_150()
+    train_dataset, val_dataset, test_dataset = data_preprocessing.get_blurred_150()
     blur150_losses, blur150_accuracies = train_resnet50(train_dataset, val_dataset, batch_size, num_epochs, augmentation="blur50")
     blur150_accuracy, blur150_f1, blur150_precision, blur150_recall = eval_resnet50(test_dataset, batch_size, augmentation="blur50")
 
@@ -240,7 +240,7 @@ def main():
     print(f"blur150 Recall: {blur150_recall:.2f}")
 
     # Blur 200 augmented data
-    train_dataset, val_dataset, test_dataset = shiny_data.get_blurred_200()
+    train_dataset, val_dataset, test_dataset = data_preprocessing.get_blurred_200()
     blur200_losses, blur200_accuracies = train_resnet50(train_dataset, val_dataset, batch_size, num_epochs, augmentation="blur50")
     blur200_accuracy, blur200_f1, blur200_precision, blur200_recall = eval_resnet50(test_dataset, batch_size, augmentation="blur50")
 
@@ -252,7 +252,7 @@ def main():
     print(f"blur200 Recall: {blur200_recall:.2f}")
 
     # Blur full augmented data
-    train_dataset, val_dataset, test_dataset = shiny_data.get_blurred_full()
+    train_dataset, val_dataset, test_dataset = data_preprocessing.get_blurred_full()
     blurfull_losses, blurfull_accuracies = train_resnet50(train_dataset, val_dataset, batch_size, num_epochs, augmentation="blur50")
     blurfull_accuracy, blurfull_f1, blurfull_precision, blurfull_recall = eval_resnet50(test_dataset, batch_size, augmentation="blur50")
 
