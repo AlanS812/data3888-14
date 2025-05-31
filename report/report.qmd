@@ -1,5 +1,5 @@
 ---
-title: "DATA3888 - Image Quality and Classification"
+title: "Evaluating Model Robustness to Image Quality Degradation in Histological Classification"
 subtitle: "Image 14"
 date: 30/05/2025
 bibliography: references.bib
@@ -7,11 +7,14 @@ link-citations: true
 nocite: '@*'
 format:
   html:
-    code-fold: true
-    embed-resources: true
-    code-tools: true
     toc: true
+    toc-depth: 2
+    number-sections: true
+    smooth-scroll: true
+    code-fold: true
     code-overflow: scroll
+    code-tools: true
+    embed-resources: true
     theme: united
     code-block-bg: true
     code-block-border-left: "dodgerblue"
@@ -19,9 +22,11 @@ editor:
   markdown: 
     wrap: 72
 ---
-::: {.panel-tabset}
 
 # Executive Summary
+
+[TODO]
+
 # Background
 
 The medical field is increasingly turning to Computer Vision models for classification tasks, often distinguishing cell types. With rapid increases in the field, models have come to accuracies of up to 98.5% [@aftab2025], slightly above that of an experienced human pathologist [@christiansen2025]. The question becomes, can these models maintain their performance in day-to-day practice? In real life, cell images do not always have perfect quality. Investigating how drops in image quality impact classification performance will give medical imagers a better view of how these models will perform on real data. 
@@ -33,6 +38,7 @@ WSI is the common practice of scanning full microscope slides, rather than scann
 There are ways to mitigate image quality drops: increasing the number of focal points will reduce the prominence of the issue, but not eradicate it entirely. Further, this will also increase processing time, inconveniencing patients and adding delays on overloaded labs. [@lopez2013] Imaging technology is advancing quickly, but with their prohibitive expense, the issue is likely to persist.
 
 # Method
+::: {.panel-tabset}
 
 ## Data Collection
 
@@ -66,7 +72,10 @@ Models were tested using the same testing set at different augmentation levels a
 
 To evaluate overall performance, metrics of accuracy, confusion matrices, average maximum confidence and weighted F1, precision, recall scores were taken. For a per class breakdown, metrics of precision, recall, f1, average confidence and standard deviation and prediction count were taken.
 
+:::
+
 # Results
+::: {.panel-tabset}
 
 ## Machine vs Deep Learning
 
@@ -96,6 +105,7 @@ Therefore in the case of image quality concerns, the PCA transformed XGBoost mod
 Why do deep learning models default to immune and stromal?
 XGBoost ends up leaning towards tumour and immune
 RF will rarely predict ‘other’, goes toward tumour and stromal and stops predicting immune.
+:::
 
 # Discussion
 
@@ -105,4 +115,4 @@ Regarding model development practice, the training set was relatively low due to
 
 # Conclusion
 
-::: 
+[TODO]
