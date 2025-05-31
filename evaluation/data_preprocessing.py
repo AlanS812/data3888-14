@@ -17,10 +17,13 @@ import cv2
 from skimage import util
 
 
-def get_image_paths(base_path="data/100"):
-    """
-    Load the training data
-    """
+#def get_image_paths(base_path="data/100"):
+
+def get_image_paths(base_path=None): # pipeline addition
+    
+    if base_path is None:
+        # This navigates from evaluation/ → ../data/100
+        base_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'data', '100'))
 
     # Get tumour file paths and shuffle
     tumour_files = []
@@ -64,24 +67,28 @@ def get_image_paths(base_path="data/100"):
     # Get the file paths for each category
     for dir_name in tumour_dirs:
         dir_path = os.path.join(base_path, dir_name)
+        #print("[DEBUG] Scanning", dir_path)
         if os.path.isdir(dir_path):
             files = [os.path.join(dir_path, f) for f in os.listdir(dir_path)]
             tumour_files.extend(files)
     
     for dir_name in immune_dirs:
         dir_path = os.path.join(base_path, dir_name)
+        #print("[DEBUG] Scanning", dir_path)
         if os.path.isdir(dir_path):
             files = [os.path.join(dir_path, f) for f in os.listdir(dir_path)]
             immune_files.extend(files)
 
     for dir_name in stromal_dirs:
         dir_path = os.path.join(base_path, dir_name)
+        #print("[DEBUG] Scanning", dir_path)
         if os.path.isdir(dir_path):
             files = [os.path.join(dir_path, f) for f in os.listdir(dir_path)]
             stromal_files.extend(files)
 
     for dir_name in other_dirs:
         dir_path = os.path.join(base_path, dir_name)
+        #print("[DEBUG] Scanning", dir_path)
         if os.path.isdir(dir_path):
             files = [os.path.join(dir_path, f) for f in os.listdir(dir_path)]
             other_files.extend(files)
@@ -93,13 +100,13 @@ def load_resize(img_path, size=(224,224)):
     img = img.resize(size)
     return np.array(img)
 
-def label_and_split(images, label, training_size, val_size, testing_size):
-    random.shuffle(images)
-    return (
-        list(zip(images[:training_size], [label]*training_size)),
-        list(zip(images[training_size:training_size+val_size], [label]*val_size)),
-        list(zip(images[training_size+val_size:training_size+val_size+testing_size], [label]*testing_size)),
-    )
+#def label_and_split(images, label, training_size, val_size, testing_size):
+#    random.shuffle(images)
+#    return (
+#        list(zip(images[:training_size], [label]*training_size)),
+#        list(zip(images[training_size:training_size+val_size], [label]*val_size)),
+#        list(zip(images[training_size+val_size:training_size+val_size+testing_size], [label]*testing_size)),
+#    )
 
 def label_and_split(images, label, training_size=2500, val_size=500, testing_size=1000):
     random.shuffle(images)
@@ -115,7 +122,14 @@ def load_split_images(training_size=2500, val_size=500, testing_size=1000):
 
     total_size = training_size + val_size + testing_size * 3  # Adjust total size for 3 test sets
 
-    tumour_files, immune_files, stromal_files, other_files = get_image_paths("data/original_data")
+    #tumour_files, immune_files, stromal_files, other_files = get_image_paths("data/original_data")
+    tumour_files, immune_files, stromal_files, other_files = get_image_paths() # pipeline addition
+    print("Total image counts:")
+    print("  Tumour:", len(tumour_files))
+    print("  Immune:", len(immune_files))
+    print("  Stromal:", len(stromal_files))
+    print("  Other:", len(other_files))
+
     tumour_imgs = [load_resize(img_path) for img_path in tumour_files[:total_size]]
     immune_imgs = [load_resize(img_path) for img_path in immune_files[:total_size]]
     stromal_imgs = [load_resize(img_path) for img_path in stromal_files[:total_size]]
@@ -125,6 +139,12 @@ def load_split_images(training_size=2500, val_size=500, testing_size=1000):
     i_train, i_val, i_test_all = label_and_split(immune_imgs, 'Immune', training_size, val_size, testing_size * 3)
     s_train, s_val, s_test_all = label_and_split(stromal_imgs, 'Stromal', training_size, val_size, testing_size * 3)
     o_train, o_val, o_test_all = label_and_split(other_imgs, 'Other', training_size, val_size, testing_size * 3)
+
+    print("After label_and_split:")
+    print("  Tumour split:", len(t_train), len(t_val), len(t_test_all))
+    print("  Immune split:", len(i_train), len(i_val), len(i_test_all))
+    print("  Stromal split:", len(s_train), len(s_val), len(s_test_all))
+    print("  Other split:", len(o_train), len(o_val), len(o_test_all))
 
     training_data = t_train + i_train + s_train + o_train
     val_data = t_val + i_val + s_val + o_val
@@ -268,7 +288,6 @@ def adjust_contrast(images, factor=1.5):
         contrasted = enhancer.enhance(factor)
         adjusted.append(np.array(contrasted))
     return np.array(adjusted)
-
 
 # Create datasets
 def get_original(training_size=2500, val_size=500, testing_size=1000):

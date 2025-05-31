@@ -14,10 +14,10 @@ import joblib
 import itertools
 import csv
 from skimage.feature import hog
-import shiny_data
+import data_preprocessing
 
 def train_and_evaluate_xgboostHOG(folder='original'):
-    Xmat_train, Xmat_val, Xmat_test, y_train_enc, y_val_enc, y_test_enc = shiny_data.load_split_images()
+    Xmat_train, Xmat_val, Xmat_test, y_train_enc, y_val_enc, y_test_enc = data_preprocessing.load_split_images()
 
     def extract_hog_features(images):
         hog_features = []
@@ -103,7 +103,7 @@ def train_and_evaluate_xgboostHOG(folder='original'):
     return xgb_model, accuracy, f1
 
 def train_and_evaluate_xgboostPCA(folder='original', n_components=100, save_pca=False, load_pca=True):
-    Xmat_train, Xmat_val, Xmat_test, y_train_enc, y_val_enc, y_test_enc = shiny_data.load_split_images()
+    Xmat_train, Xmat_val, Xmat_test, y_train_enc, y_val_enc, y_test_enc = data_preprocessing.load_split_images()
 
     X_train_flat = Xmat_train.reshape(Xmat_train.shape[0], -1)
     X_test_flat = Xmat_test.reshape(Xmat_test.shape[0], -1)

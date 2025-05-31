@@ -15,16 +15,23 @@ from PIL import Image, ImageFilter
 #import tensorflow as tf
 #from tensorflow.keras.models import load_model
 
+# pipeline changes
+EVAL_DIR = os.path.dirname(os.path.abspath(__file__))
+MODELS_DIR = os.path.join(EVAL_DIR, "..", "models")
+METRICS_DIR = os.path.join(EVAL_DIR, "..", "metrics")
+
 def test_augmented_xgboost():
     # Load test sets
     _, _, X_test1, X_test2, X_test3, _, _, y_test1, y_test2, y_test3 = data_preprocessing.load_split_images()
 
     # PCA
-    pca = joblib.load('Base_pca.joblib')
+    # pca = joblib.load('Base_pca.joblib')
+    pca = joblib.load(os.path.join(MODELS_DIR, "Base_pca.joblib")) # pipeline changes
 
     # Load model
     xgb_model = xgb.XGBClassifier()
-    xgb_model.load_model('xgboost.json')
+    #xgb_model.load_model('xgboost.json')
+    xgb_model.load_model(os.path.join(MODELS_DIR, "xgboost.json")) # pipeline changes
 
     # Specify augmentations
     blur_sizes = [0,1,3,5,7,9,19]
@@ -32,7 +39,8 @@ def test_augmented_xgboost():
 
      # Init csv
     #csv_file = 'xgboost_augmented_metrics.csv'
-    csv_file = '../metrics/xgboost_augmented_metrics.csv' # pipeline adjustment
+    csv_file = os.path.join(METRICS_DIR, "xgboost_augmented_metrics.csv") # pipeline adjustment
+
     with open(csv_file, 'w', newline='') as f:
         writer = csv.writer(f)
         writer.writerow([
@@ -143,7 +151,8 @@ def test_augmented_resnet():
     model = models.resnet50(pretrained=False)
     num_ftrs = model.fc.in_features
     model.fc = nn.Linear(num_ftrs, 4)
-    model.load_state_dict(torch.load('resnet50_models/resnet50_original_model.pt', map_location=device))
+    #model.load_state_dict(torch.load('resnet50_models/resnet50_original_model.pt', map_location=device))
+    model.load_state_dict(torch.load(os.path.join(MODELS_DIR, "resnet50_models", "resnet50_original_model.pt"), map_location=device)) # pipeline change
     model = model.to(device)
     model.eval()
 
@@ -153,7 +162,8 @@ def test_augmented_resnet():
 
     # Init csv
     #csv_file = 'resnet50_augmented_metrics.csv'
-    csv_file = '../metrics/resnet50_augmented_metrics.csv' # pipeline adjustment
+    csv_file = os.path.join(METRICS_DIR, "resnet50_augmented_metrics.csv") # pipeline adjustment
+
     test_datasets = [test_dataset1, test_dataset2, test_dataset3]
     test_set_names = ['1', '2', '3']
     with open(csv_file, 'w', newline='') as f:
@@ -251,15 +261,17 @@ def test_augmented_cnn():
     _, _, X_test1, X_test2, X_test3, _, _, y_test1, y_test2, y_test3 = data_preprocessing.load_split_images()
 
     # Load model
-    model = load_model('cnn_original.h5')
+    # model = load_model('cnn_original.h5')
+    model = load_model(os.path.join(MODELS_DIR, "cnn_original.h5")) # pipeline change
 
     # Specify augmentations
     blur_sizes = [0,1,3,5,7,9,19]
     noise_levels = [0,1,3,5,10,20,30]
 
     # Init csv
-    #csv_file = 'cnn_original_augmented_metrics.csv'
-    csv_file = '../metrics/cnn_original_augmented_metrics.csv' # pipeline adjustment
+    #csv_file = 'cnn_original_augmented_metrics.csv' 
+    csv_file = os.path.join(METRICS_DIR, "cnn_original_augmented_metrics.csv") # pipeline adjustment
+
     with open(csv_file, 'w', newline='') as f:
         writer = csv.writer(f)
         writer.writerow([
@@ -315,7 +327,7 @@ def test_augmented_cnn():
                 with open(csv_file, 'a', newline='') as f:
                     writer = csv.writer(f)
                     writer.writerow([
-                        test_set_name,
+                        test_set_name, # test_num ? is this an error ?
                         blur_size,
                         noise_level,
                         accuracy,
