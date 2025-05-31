@@ -25,7 +25,7 @@ editor:
 
 # Executive Summary
 
-[TODO]
+![Diagram illustrating the experimental workflow and deployment pipeline. Each step is annotated with the corresponding Python script used, enabling full reproducibility of the process.](schematic.png)
 
 # Background
 
