@@ -13,7 +13,7 @@ For full methodology, experimental setup, and results, see the final ***[report 
 
 ## Dataset
 
-Images were cropped from a high-resolution, annotated breast tissue slide sourced from ***[GEO: GSE243280, turn into link]***. The dataset contains ~175,000 labelled cells.
+Images were cropped from a high-resolution, annotated breast tissue slide sourced from ***[GEO: GSE243280](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE243280)***. The dataset contains ~175,000 labelled cells.
 
 Cell images were grouped into Tumour, Immune, Stromal, and Other, based on biological function in breast cancer diagnosis and progression. Unlabelled cells were excluded from the study.
 
