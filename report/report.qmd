@@ -35,11 +35,13 @@ metrics <- read_csv("../metrics/combined_report_metrics.csv")
 ```{r fig-blur-accuracy,fig.width=12, fig.height=8, fig.cap="Accuracy vs Blur Radius by Noise Level, faceted by Model.", message=FALSE, warning=FALSE}
 
 blur_plot_data <- metrics %>%
-  select(blur_size, noise_level, accuracy, Model_Label) %>%
+  select(test_set, blur_size, noise_level, accuracy, Model_Label) %>%
   filter(Model_Label %in% c("RF (PCA)", "XGBoost (PCA)", "CNN", "ResNet")) %>%
+  group_by(blur_size, noise_level, Model_Label) %>%
+  summarise(accuracy = mean(accuracy), .groups = "drop") %>%
   mutate(
     noise_level = as.factor(noise_level),
-    Model_Label = factor(Model_Label)
+    Model_Label  = factor(Model_Label)
   )
 
 print(ggplot(blur_plot_data, aes(x = blur_size, y = accuracy, color = noise_level, group = noise_level)) +
@@ -51,7 +53,7 @@ print(ggplot(blur_plot_data, aes(x = blur_size, y = accuracy, color = noise_leve
     y = "Accuracy",
     color = "Noise Level"
   ) +
-  scale_color_brewer(palette = "Blues", direction = -1) +
+    scale_color_brewer(palette = "Blues") +
   theme_minimal(base_size = 13) +
   theme(
     strip.text = element_text(face = "bold", size = 12),
