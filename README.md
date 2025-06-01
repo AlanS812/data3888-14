@@ -53,29 +53,24 @@ python3 evaluation/run_pipeline.py
 
 To retrain models from scratch, run the following scripts manually. Results are saved in the `models/` directory.
 
-### Random Forest
+### Random Forest (`random_forest.ipynb`)
 ```bash
 jupyter nbconvert --to script --output random_forest models/random_forest.ipynb
 python3 models/random_forest.py
 ```
-### CNN
+### CNN (`cnn_original.h5`)
 ```bash
 models/cnn.ipynb
 ```
-Saves trained model to `models/cnn_original.h5`
-
-### ResNet50
+### ResNet50 (`resnet50_original_model.pt`)
 ```bash
 python3 models/resnet50.py
 ```
 
-This will use `resnet50_models/` to store intermediate outputs and save the final model as `resnet50_original_model.pt`
-
-### XGBoost
+### XGBoost (`models/xgboost.json`)
 ```bash
 python3 models/xgboost.py
 ```
-Model will be saved as `xgboost.json`
 
 ## Running the Shiny App (Python Shiny)
 
