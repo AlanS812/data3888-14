@@ -237,9 +237,17 @@ The backend integrates two key pipelines: a pre-computed (but dynamically updata
 
 Page 1 displays example cell images from each class under user-selected blur and noise levels, alongside graphical performance summaries to allow quick model comparison under the augmentations applied.
 
+![](app_pics/p1_1.png)
+![](app_pics/p1_2.png)
+
 Page 2 provides per-model class-level performance, including confidence and confusion matrices, supporting evaluation of model reliability and cell-type-specific performance as required.
 
+![](app_pics/p2_1.png)
+![](app_pics/p2_2.png)
+
 Page 3 allows users to upload an image and view predictions across all augmentation combinations, helping assess model behaviour under novel, real-world image conditions.
+
+![](app_pics/p3.png)
 
 # Discussion
 
