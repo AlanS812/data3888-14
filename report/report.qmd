@@ -46,7 +46,7 @@ ResNet50 remained optimal on high-quality data (≥70% accuracy), but XGBoost de
 
 To support clinical interpretation, a Shiny application was developed to visualise the effects of image degradation and model performance at each augmentation level, both overall and by class. The app also enables pathologists to upload their own images and observe model predictions across varying levels of degradation, providing insights into prediction stability, and the most appropriate model for their image quality.   
 
-The experiment was designed for full reproducibility. All code and implementation instructions are available at https://github.com/AlanS812/data3888-14. @fig-schematic outlines the experimental workflow, with corresponding Python scripts indicated for clarity and ease of use.
+The experiment was designed for full reproducibility. All code and implementation instructions are available at [https://github.com/AlanS812/data3888-14](https://github.com/AlanS812/data3888-14). @fig-schematic outlines the experimental workflow, with corresponding Python scripts indicated for clarity and ease of use.
 
 ![Diagram illustrating the experimental workflow and deployment pipeline. Each step is annotated with the corresponding Python script used, enabling full reproducibility of the process.](schematic.png){#fig-schematic}
 
@@ -241,18 +241,6 @@ labeled1
 
 
 Looking to @fig-conf-aug, following image augmentation, ResNet50 predominantly predicted immune and stromal classes, while the CNN defaulted almost exclusively to stromal. Machine learning models initially achieved high precision for the immune class (~80%), which declined to ~60% under full augmentation, and tended to predict stromal and tumour. The ‘other’ class was rarely predicted by any model, likely due to its definition based on function rather than consistent visual features.   
-
-Computer vision models are increasingly used in pathology, often achieving performances comparable to expert clinicians. However, these models are typically trained on high-quality images that are costly to produce, while real-world clinical data is often lower in quality. This study evaluates model performance under varying levels of image degradation to identify architectures that are more robust to realistic, lower quality inputs and inform clinical expectations and decisions in practice.
-
-The impact of focus-related artefacts in Whole Slide Imaging (WSI)—specifically blur and noise—on the classification of breast tissue cells was the focus of this experiment. To simulate the low-quality test data often encountered in clinical settings, Gaussian blur and noise were applied to images during testing. Four models were evaluated: ResNet50 (pretrained on ImageNet), a custom CNN, Random Forest, and XGBoost. Deep learning models used normalised inputs to learn local features, while machine learning models applied PCA to capture global patterns.
-
-All models experienced decreased performance with image degradation, however machine learning models were the most robust. They showed negligible drops with noise and only ~10% accuracy loss at extreme blur levels. Notably, both consistently detected >80% of tumours and kept a relatively high precision for immune cells, showing potential for utility as screening tools even if overall accuracy drops.. On the other hand, deep learning models, while initially the most accurate, deteriorated rapidly with augmentation—often defaulting to one or two classes.
-
-ResNet50 remained optimal on high-quality data (≥70% accuracy), but XGBoost demonstrated the best performance under degraded conditions, with stable accuracy and high recall for tumour cells. These results highlight the need to match model choice to the expected quality of clinical input data.
-
-To support clinical interpretation, a Shiny application was developed to visualise the effects of image degradation and model performance at each augmentation level, both overall and by class. The app also enables pathologists to upload their own images and observe model predictions across varying levels of degradation, providing insights into prediction stability, and the most appropriate model for their image quality.
-
-The experiment was designed for full reproducibility. All code and implementation instructions are available at https://github.com/AlanS812/data3888-14. The {fig 1} below outlines the experimental workflow, with corresponding Python scripts indicated for clarity and ease of use.
 
 
 # Application Development
