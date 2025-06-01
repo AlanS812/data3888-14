@@ -13,7 +13,7 @@ For full methodology, experimental setup, and results, see the final [report lin
 
 ## Dataset
 
-Images were cropped from a high-resolution, annotated breast tissue slide sourced from GEO: GSE243280. The dataset contains ~175,000 labelled cells.
+Images were cropped from a high-resolution, annotated breast tissue slide sourced from [GEO: GSE243280, turn into link]. The dataset contains ~175,000 labelled cells.
 
 Cell images were grouped into Tumour, Immune, Stromal, and Other, based on biological function in breast cancer diagnosis and progression. Unlabelled cells were excluded from the study.
 
@@ -24,35 +24,46 @@ A balanced subset of 20,000 images (5,000 per class) was used to ensure equal cl
 
 # Reproducing Results
 
-This repo includes an evaluation pipeline for image classification models. The script run_pipeline.py (located in the evaluation/ folder) automates the evaluation process:
+This repo includes an evaluation pipeline for image classification models. The script `run_pipeline.py` (located in the `evaluation/` folder) automates the evaluation process:
 
-- Converts necessary Jupyter notebooks to .py scripts.
-- Runs evaluation for RF, CNN, ResNet, and XGBoost models, only if their output files (*_augmented_metrics.csv) are missing.
-- Merges all model metrics into two final CSVs, combined_report_metrics.csv and combined_app_metrics.csv, for the report and app, respectively.
+- Converts necessary Jupyter notebooks to `.py` scripts.
+- Runs evaluation for RF, CNN, ResNet, and XGBoost models, **only if** their output files (`*_augmented_metrics.csv`) are missing.
+- Merges all model metrics into two final CSVs:  
+  - `combined_report_metrics.csv` (for the report)  
+  - `combined_app_metrics.csv` (for the Shiny app)
 
-To run the pipeline:
+### To run the pipeline:
 
+```bash
 python3 evaluation/run_pipeline.py
+```
 
-Note: This script does not retrain deep learning models from scratch — it assumes models like ResNet50, CNN, and XGBoost are already trained and saved (e.g., .pt, .h5, .json). See below for details on retraining if needed.
+> **Note:** This script does **not retrain deep learning models from scratch** — it assumes models like ResNet50, CNN, and XGBoost are already trained and saved (e.g., `.pt`, `.h5`, `.json`). See below for details on manual retraining.
+## Manual Retraining
 
-If you’d like to retrain models from scratch, run the following manually
+To retrain models from scratch, run the following scripts manually
 
-Random Forest variants:
+Random Forest
+```bash
 jupyter nbconvert --to script --output random_forest models/random_forest.ipynb
 python3 models/random_forest.py
-
+```
 CNN:
+```bash
 models/cnn.ipynb
+```
 
 Saves trained model to: models/cnn_original.h5
 
-ResNet50:
+ResNet50
+```bash
 python3 models/resnet50.py
+```
 
 This will use resnet50_models/ to store intermediate outputs and save the final model as resnet50_original_model.pt
 
-XGBoost:
+XGBoost
+```bash
 python3 models/xgboost.py
-
+```
 Model will be saved as: xgboost.json
