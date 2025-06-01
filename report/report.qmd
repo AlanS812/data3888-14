@@ -83,7 +83,7 @@ The selected models were chosen based on their compatibility with high-dimension
 
 Images were normalised with ImageNet parameters for both deep learning models to ensure comparability between results. For machine learning models, three methods of input were tested: raw pixels, Histogram of Gradients (HOG) and Principal Component Analysis (PCA). [@muldrova] Raw pixels were too computationally expensive to scale, and HOG had poor results, likely due to the loss of intensity and colour information which is vital in stained images.   
 
-PCA gave the best performance while minimising space, converting 50,000 pixels to 100 components and accounting for ~60% of variance in the dataset. Images were flattened, then the principal components (PC) were fit to the training dataset. Testing images were linearly transformed with the pre-fit PC, not refit to the testing data to avoid data leakage. Each principal component can be visualised as a 224x224 image with some global feature and transformed images will give insight into how the model decides, allowing for better interpretability, vital for high-stakes medical decisions. [15]  
+PCA gave the best performance while minimising space, converting 50,000 pixels to 100 components and accounting for ~60% of variance in the dataset, see @fig-appendix-pca in appendix for details. Images were flattened, then the principal components (PC) were fit to the training dataset. Testing images were linearly transformed with the pre-fit PC, not refit to the testing data to avoid data leakage. Each principal component can be visualised as a 224x224 image with some global feature and transformed images will give insight into how the model decides, allowing for better interpretability, vital for high-stakes medical decisions. 
 
 ## Evaluation
 
@@ -257,17 +257,15 @@ The experiment was designed for full reproducibility. All code and implementatio
 
 # Application Development
 
-![Shiny application pages 1 to 3, larger pictures can be found in the appendix](app_pics/overview.png)
+![Shiny application pages 1 to 3, larger pictures can be found in the appendix](app_pics/overview.png){#fig-shiny}
 
-The application is designed to complement the real-world workflows of medical imaging professionals and diagnosticians, where visual assessment is central. By pairing augmented images with model performance metrics, it bridges the gap between human judgement and machine classification, supporting interdisciplinary decision-making.
+The application in @fig-shiny is designed to complement the real-world workflows of medical imaging professionals and diagnosticians, where visual assessment is central. By pairing augmented images with model performance metrics, it bridges the gap between human judgement and machine classification, supporting interdisciplinary decision-making.
 
 The backend integrates two key pipelines: a pre-computed (but dynamically updatable) metrics pipeline, and pre-trained models that allow new predictions from user-uploaded images.
 
 Page 1 displays example cell images from each class under user-selected blur and noise levels, alongside graphical performance summaries to allow quick model comparison under the augmentations applied.
 
 Page 2 provides per-model class-level performance, including confidence and confusion matrices, supporting evaluation of model reliability and cell-type-specific performance as required.
-
-
 
 Page 3 allows users to upload an image and view predictions across all augmentation combinations, helping assess model behaviour under novel, real-world image conditions.ns.
 
@@ -313,4 +311,39 @@ This exploration underscores the importance of aligning the choice of model with
 
 ## Page 3
 ![](app_pics/p3.png)
+
+## PCA Cumulative Variance
+
+```{r fig-appendix-pca, fig.cap="Cumulative variance against number of components plot to analyse PCA.", message=FALSE, warning=FALSE}
+# install.packages(c("reticulate","ggplot2"))  # if not already installed
+library(reticulate)
+library(ggplot2)
+
+# 1. Load joblib and your PCA model
+joblib <- import("joblib")
+pca    <- joblib$load("../app/Base_pca.joblib")
+
+# 2. Extract explained variance ratios and compute cumulative sum
+var_ratios <- pca$explained_variance_ratio_
+cumvar     <- cumsum(var_ratios)
+
+# 3. Prepare a data frame for plotting
+df <- data.frame(
+  Component = seq_along(cumvar),
+  CumulativeVariance = cumvar
+)
+
+# 4. Plot
+ggplot(df, aes(x = Component, y = CumulativeVariance)) +
+  geom_line(color = "steelblue", size = 1) +
+  geom_point(color = "darkred", size = 2) +
+  # only show every 50th component on the x-axis
+  scale_x_continuous(breaks = seq(0, max(df$Component), by = 50)) +
+  labs(
+    title = "PCA Cumulative Explained Variance",
+    x     = "Principal Component",
+    y     = "Cumulative Variance Explained"
+  ) +
+  theme_minimal()
+```
 
