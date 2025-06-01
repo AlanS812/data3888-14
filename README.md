@@ -24,6 +24,8 @@ A balanced subset of 20,000 images (5,000 per class) was used to ensure equal cl
 
 # Reproducing Results
 
+**Note**: Running model training files is time consuming. If you would like to skip to evaluation, download the two `*.joblib` files from [here](https://drive.google.com/drive/folders/1NigrmCDCaJrOYtNyPjFiV0rYguptSdPH?usp=sharing) and place them in `data3888-14/app`. They exceeded Github storage requirements so need to be downloaded manually.
+
 This repo includes an evaluation pipeline for image classification models. The script `run_pipeline.py` (located in the `evaluation/` folder) automates the evaluation process:
 
 - Converts necessary Jupyter notebooks to `.py` scripts.
