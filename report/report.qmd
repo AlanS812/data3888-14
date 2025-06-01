@@ -143,7 +143,7 @@ Several other studies have similar findings, showing that models trained using s
 
 ### Machine Learning
 
-![Original and augmented images reconstructed after PCA dimension reductio, processed in pca.py.](reconstruction_comparison.png){#fig-pca width=60%}
+![Original and augmented images reconstructed after PCA dimension reduction, generated in pca.py.](reconstruction_comparison.png){#fig-pca width=60%}
 
 On the other hand, although starting at lower accuracies the machine learning models are more robust to drops in quality. Both models have limited drops with a blur kernel size of up to 5 and hardly any impact from noise levels of up to 30.    
 
