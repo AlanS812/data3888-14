@@ -4,6 +4,7 @@ subtitle: "Image 14"
 date: 30/05/2025
 bibliography: references.bib
 link-citations: true
+csl: nature.csl
 nocite: '@*'
 format:
   html:
