@@ -41,7 +41,7 @@ cnn_model = load_model(os.path.join(model_dir, "cnn_original.h5"))
 rn_model = models.resnet50(pretrained=False)
 num_ftrs = rn_model.fc.in_features
 rn_model.fc = nn.Linear(num_ftrs, 4)
-rn_model.load_state_dict(torch.load(os.path.join(model_dir, "resnet50.pt"), map_location="cpu"))
+rn_model.load_state_dict(torch.load(os.path.join(model_dir, "resnet50_original_model.pt"), map_location="cpu"))
 rn_model.eval()
 
 rf_model = joblib.load(os.path.join(model_dir, "rf_pca_model.joblib"))
@@ -86,16 +86,30 @@ def predict_xgb(img, pca, model):
     return preds, blur_sizes, noise_levels
 
 def predict_resnet(img, model):
-    blur_sizes = [0,1,3,5,7,9,19]
-    noise_levels = [0,1,3,5,10,20,30]
+    blur_sizes = [0, 1, 3, 5, 7, 9, 19]
+    noise_levels = [0, 1, 3, 5, 10, 20, 30]
+
+    # Ensure image is converted to torch tensor correctly
     img_tensor = torch.tensor(img).permute(2, 0, 1).float()
     preds = np.empty((len(noise_levels), len(blur_sizes)), dtype=int)
+
     with torch.no_grad():
         for i, noise in enumerate(noise_levels):
             for j, blur in enumerate(blur_sizes):
-                aug = evaluation.apply_augmentations(img_tensor.unsqueeze(0), blur, noise).to(device)
+                # Call augmentation function
+                aug = evaluation.apply_augmentations(img_tensor.unsqueeze(0), blur, noise)
+
+                # 🔧 FIX: Ensure result is a torch tensor
+                if not isinstance(aug, torch.Tensor):
+                    aug = torch.tensor(aug).float()
+
+                # Move to CPU device
+                aug = aug.to("cpu")
+
+                # Get model output and prediction
                 outputs = model(aug)
                 preds[i, j] = torch.argmax(torch.softmax(outputs, dim=1), dim=1).item()
+
     return preds, blur_sizes, noise_levels
 
 #df = pd.read_csv("results.csv")
