@@ -1,37 +1,50 @@
+import sys
+import os
+
+# === Define base and sibling directories ===
+app_dir = os.path.dirname(__file__)
+eval_dir = os.path.join(app_dir, "..", "evaluation")
+model_dir = os.path.join(app_dir, "..", "models")
+metrics_dir = os.path.join(app_dir, "..", "metrics")
+
+# === Add folders to sys.path so we can import custom modules ===
+sys.path.append(eval_dir)
+sys.path.append(model_dir)  # Only needed if you have Python files there
+
+# === Standard imports ===
 from shiny import App, ui, render, req
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import os # ADDED
 from PIL import Image, ImageEnhance, ImageFilter
 import seaborn as sns
-import data_preprocessing
 import torch
 from tensorflow.keras.models import load_model
 import xgboost as xgb
 import joblib
 from torchvision import models
 import torch.nn as nn
-import evaluation
-
-##
 from matplotlib.colors import LinearSegmentedColormap
 
-# Load once
-pca = joblib.load("Base_pca.joblib")
-xgb_model = xgb.XGBClassifier()
-xgb_model.load_model("xgboost.json")
-cnn_model = load_model("cnn_original.h5")
+# === Your custom modules ===
+import data_preprocessing
+import evaluation
 
-device = torch.device("cpu")
+# === Load models from model_dir ===
+pca = joblib.load(os.path.join(model_dir, "Base_pca.joblib"))
+
+xgb_model = xgb.XGBClassifier()
+xgb_model.load_model(os.path.join(model_dir, "xgboost.json"))
+
+cnn_model = load_model(os.path.join(model_dir, "cnn_original.h5"))
+
 rn_model = models.resnet50(pretrained=False)
 num_ftrs = rn_model.fc.in_features
 rn_model.fc = nn.Linear(num_ftrs, 4)
-rn_model.load_state_dict(torch.load("resnet50.pt", map_location=device))
-rn_model = rn_model.to(device)
+rn_model.load_state_dict(torch.load(os.path.join(model_dir, "resnet50.pt"), map_location="cpu"))
 rn_model.eval()
 
-rf_model = joblib.load("rf_pca_model.joblib")
+rf_model = joblib.load(os.path.join(model_dir, "rf_pca_model.joblib"))
 
 # Prediction functions
 
