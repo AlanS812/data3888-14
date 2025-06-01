@@ -19,9 +19,6 @@ format:
     theme: united
     code-block-bg: true
     code-block-border-left: "dodgerblue"
-editor: 
-  markdown: 
-    wrap: 72
 ---
 
 ```{r, message=FALSE, warning=FALSE}
@@ -35,7 +32,7 @@ library(cowplot)
 metrics <- read_csv("../metrics/combined_report_metrics.csv")
 ```
 
-```{r fig-blur-accuracy, fig.cap="Figure 1. Accuracy vs Blur Radius by Noise Level, faceted by Model.", message=FALSE, warning=FALSE}
+```{r fig-blur-accuracy,fig.width=12, fig.height=8, fig.cap="Accuracy vs Blur Radius by Noise Level, faceted by Model.", message=FALSE, warning=FALSE}
 
 blur_plot_data <- metrics %>%
   select(blur_size, noise_level, accuracy, Model_Label) %>%
@@ -54,6 +51,7 @@ print(ggplot(blur_plot_data, aes(x = blur_size, y = accuracy, color = noise_leve
     y = "Accuracy",
     color = "Noise Level"
   ) +
+  scale_color_brewer(palette = "Blues", direction = -1) +
   theme_minimal(base_size = 13) +
   theme(
     strip.text = element_text(face = "bold", size = 12),
@@ -61,7 +59,7 @@ print(ggplot(blur_plot_data, aes(x = blur_size, y = accuracy, color = noise_leve
   ))
 ```
 
-```{r fig-conf-aug, fig.cap="Figure 2. True and Predicted label predictions averaged across test sets.", message=FALSE, warning=FALSE}
+```{r fig-conf-aug, fig.width=12, fig.height=8, fig.cap="True and Predicted label predictions averaged across test sets.", message=FALSE, warning=FALSE}
 
 # need to fix caption here 
 
@@ -84,21 +82,41 @@ get_avg_cm <- function(df, model_name, blur_val, noise_val) {
 plot_cm <- function(cm, title) {
   df <- as.data.frame(as.table(cm))
   colnames(df) <- c("True", "Predicted", "Freq")
-  
-  df$True <- factor(as.integer(df$True), levels = 1:4, labels = c("Immune", "Other", "Stromal", "Tumour"))
-  df$Predicted <- factor(as.integer(df$Predicted), levels = 1:4, labels = c("Immune", "Other", "Stromal", "Tumour"))
-
-  ggplot(df, aes(x = Predicted, y = True, fill = Freq)) +
-    geom_tile(color = "white") +
-    geom_text(aes(label = round(Freq, 1)), size = 4) +
-    scale_fill_gradient(low = "white", high = "dodgerblue") +
+  df$True      <- factor(as.integer(df$True),
+                         levels=1:4,
+                         labels=c("Immune","Other","Stromal","Tumour"))
+  df$Predicted <- factor(as.integer(df$Predicted),
+                         levels=1:4,
+                         labels=c("Immune","Other","Stromal","Tumour"))
+  ggplot(df, aes(x=Predicted, y=True, fill=Freq)) +
+    geom_tile(color="white") +
+    geom_text(aes(label=round(Freq, 1)), size = 4) +
+    scale_fill_gradient(low="white", high="dodgerblue") +
     coord_fixed() +
-    labs(title = title) +
-    theme_minimal(base_size = 12) +
+    labs(title=title) +
+        theme_minimal(base_size = 12) +
     theme(
-      axis.title = element_blank(),         # <- remove axis titles
-      legend.position = "none",
-      plot.title = element_text(size = 12, face = "bold")
+      axis.title       = element_blank(),
+      legend.position  = "none",
+      plot.title       = element_text(hjust=0.5,
+                                      size=12,
+                                      face="bold",
+                                      margin=margin(b=5)),
+      plot.margin      = margin(t=5, r=5, b=5, l=5),
+
+      #nlarge & rotate x‐labels so they don't collide
+      axis.text.x      = element_text(
+                           size = 10,
+                           angle = 45,
+                           hjust = 1,
+                           vjust = 1,
+                           margin = margin(t = 5)
+                         ),
+      #give y‐labels a bit more breathing room
+      axis.text.y      = element_text(
+                           size = 10,
+                           margin = margin(r = 5)
+                         )
     )
 }
 
@@ -106,17 +124,15 @@ plot_cm <- function(cm, title) {
 p1 <- plot_cm(get_avg_cm(metrics, "XGBoost (PCA)", 0, 0), "XGBoost – No Augmentation")
 p2 <- plot_cm(get_avg_cm(metrics, "XGBoost (PCA)", 19, 30), "XGBoost – Max Augmentation")
 
-p3 <- plot_cm(get_avg_cm(metrics, "RF (PCA)", 0, 0), "RF (PCA) – No Augmentation")
-p4 <- plot_cm(get_avg_cm(metrics, "RF (PCA)", 19, 30), "RF (PCA) – Max Augmentation")
+p3 <- plot_cm(get_avg_cm(metrics, "ResNet", 0, 0), "ResNet – No Augmentation")
+p4 <- plot_cm(get_avg_cm(metrics, "ResNet", 19, 30), "ResNet – Max Augmentation")
 
-p5 <- plot_cm(get_avg_cm(metrics, "CNN", 0, 0), "CNN – No Augmentation")
-p6 <- plot_cm(get_avg_cm(metrics, "CNN", 19, 30), "CNN – Max Augmentation")
-
-p7 <- plot_cm(get_avg_cm(metrics, "ResNet", 0, 0), "ResNet – No Augmentation")
-p8 <- plot_cm(get_avg_cm(metrics, "ResNet", 19, 30), "ResNet – Max Augmentation")
-
-combined1 <- plot_grid(p1, p2, p3, p4, nrow = 2, align = "hv")
-combined2 <- plot_grid(p5, p6, p7, p8, nrow = 2, align = "hv")
+combined1 <- plot_grid(
+  p1, p3, p2, p4,
+  nrow = 2,
+  align = "hv",
+  axis  = "tblr"
+)
 
 # axis labels
 labeled1 <- add_sub(combined1, "Predicted Class", vpadding = grid::unit(1, "lines"))
@@ -124,13 +140,6 @@ labeled1 <- ggdraw(labeled1) +
   draw_label("True Class", angle = 90, x = 0, y = 0.5, vjust = 1.5)
 
 labeled1
-
-# axis labels
-labeled2 <- add_sub(combined2, "Predicted Class", vpadding = grid::unit(1, "lines"))
-labeled2 <- ggdraw(labeled2) +
-  draw_label("True Class", angle = 90, x = 0, y = 0.5, vjust = 1.5)
-
-labeled2
 ```
 
 # Executive Summary
