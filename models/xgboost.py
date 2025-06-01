@@ -67,7 +67,7 @@ def train_and_evaluate_xgboostPCA(folder='original', n_components=100, save_pca=
     X_train_flat = Xmat_train.reshape(Xmat_train.shape[0], -1)
     X_val_flat = Xmat_val.reshape(Xmat_val.shape[0], -1)
 
-    pca_path = f'{folder}_pca.joblib'
+    pca_path = f'../app/Base_pca.joblib'
     if load_pca and os.path.exists(pca_path):
         pca = joblib.load(pca_path)
     else:
@@ -167,6 +167,6 @@ if __name__ == "__main__":
 
     # Example usage: Train with PCA features
     print("Running XGBoost with PCA features...")
-    pca_model, pca_acc, pca_f1, pca_conf = train_and_evaluate_xgboostPCA(folder='original')
+    pca_model, pca_acc, pca_f1, pca_conf = train_and_evaluate_xgboostPCA(folder='original', save_pca=True, load_pca=False)
     print(f"PCA Accuracy: {pca_acc:.4f} | F1: {pca_f1:.4f}")
     print(pca_conf)
