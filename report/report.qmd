@@ -24,6 +24,115 @@ editor:
     wrap: 72
 ---
 
+```{r, message=FALSE, warning=FALSE}
+library(readr)
+library(dplyr)
+library(ggplot2)
+library(purrr)
+library(stringr)
+library(cowplot)
+
+metrics <- read_csv("../metrics/combined_report_metrics.csv")
+```
+
+```{r fig-blur-accuracy, fig.cap="Figure 1. Accuracy vs Blur Radius by Noise Level, faceted by Model.", message=FALSE, warning=FALSE}
+
+blur_plot_data <- metrics %>%
+  select(blur_size, noise_level, accuracy, Model_Label) %>%
+  filter(Model_Label %in% c("RF (PCA)", "XGBoost (PCA)", "CNN", "ResNet")) %>%
+  mutate(
+    noise_level = as.factor(noise_level),
+    Model_Label = factor(Model_Label)
+  )
+
+print(ggplot(blur_plot_data, aes(x = blur_size, y = accuracy, color = noise_level, group = noise_level)) +
+  geom_line(linewidth = 1) +
+  geom_point(size = 2) +
+  facet_wrap(~ Model_Label, ncol = 2) +
+  labs(
+    x = "Blur Radius",
+    y = "Accuracy",
+    color = "Noise Level"
+  ) +
+  theme_minimal(base_size = 13) +
+  theme(
+    strip.text = element_text(face = "bold", size = 12),
+    legend.position = "right"
+  ))
+```
+
+```{r fig-conf-aug, fig.cap="Figure 2. True and Predicted label predictions averaged across test sets.", message=FALSE, warning=FALSE}
+
+# need to fix caption here 
+
+# parse confusion matrices
+parse_cm <- function(cm_str) {
+  nums <- as.numeric(unlist(str_extract_all(cm_str, "\\d+")))
+  matrix(nums, nrow = 4, byrow = TRUE)
+}
+
+# average across test sets
+get_avg_cm <- function(df, model_name, blur_val, noise_val) {
+  df %>%
+    filter(Model_Label == model_name, blur_size == blur_val, noise_level == noise_val) %>%
+    pull(confusion_matrix) %>%
+    map(parse_cm) %>%
+    reduce(`+`) %>%
+    `/`(3)  # divide by 3 test sets
+}
+
+plot_cm <- function(cm, title) {
+  df <- as.data.frame(as.table(cm))
+  colnames(df) <- c("True", "Predicted", "Freq")
+  
+  df$True <- factor(as.integer(df$True), levels = 1:4, labels = c("Immune", "Other", "Stromal", "Tumour"))
+  df$Predicted <- factor(as.integer(df$Predicted), levels = 1:4, labels = c("Immune", "Other", "Stromal", "Tumour"))
+
+  ggplot(df, aes(x = Predicted, y = True, fill = Freq)) +
+    geom_tile(color = "white") +
+    geom_text(aes(label = round(Freq, 1)), size = 4) +
+    scale_fill_gradient(low = "white", high = "dodgerblue") +
+    coord_fixed() +
+    labs(title = title) +
+    theme_minimal(base_size = 12) +
+    theme(
+      axis.title = element_blank(),         # <- remove axis titles
+      legend.position = "none",
+      plot.title = element_text(size = 12, face = "bold")
+    )
+}
+
+# Generate plots for all models and both augmentation levels
+p1 <- plot_cm(get_avg_cm(metrics, "XGBoost (PCA)", 0, 0), "XGBoost – No Augmentation")
+p2 <- plot_cm(get_avg_cm(metrics, "XGBoost (PCA)", 19, 30), "XGBoost – Max Augmentation")
+
+p3 <- plot_cm(get_avg_cm(metrics, "RF (PCA)", 0, 0), "RF (PCA) – No Augmentation")
+p4 <- plot_cm(get_avg_cm(metrics, "RF (PCA)", 19, 30), "RF (PCA) – Max Augmentation")
+
+p5 <- plot_cm(get_avg_cm(metrics, "CNN", 0, 0), "CNN – No Augmentation")
+p6 <- plot_cm(get_avg_cm(metrics, "CNN", 19, 30), "CNN – Max Augmentation")
+
+p7 <- plot_cm(get_avg_cm(metrics, "ResNet", 0, 0), "ResNet – No Augmentation")
+p8 <- plot_cm(get_avg_cm(metrics, "ResNet", 19, 30), "ResNet – Max Augmentation")
+
+combined1 <- plot_grid(p1, p2, p3, p4, nrow = 2, align = "hv")
+combined2 <- plot_grid(p5, p6, p7, p8, nrow = 2, align = "hv")
+
+# axis labels
+labeled1 <- add_sub(combined1, "Predicted Class", vpadding = grid::unit(1, "lines"))
+labeled1 <- ggdraw(labeled1) +
+  draw_label("True Class", angle = 90, x = 0, y = 0.5, vjust = 1.5)
+
+labeled1
+
+# axis labels
+labeled2 <- add_sub(combined2, "Predicted Class", vpadding = grid::unit(1, "lines"))
+labeled2 <- ggdraw(labeled2) +
+  draw_label("True Class", angle = 90, x = 0, y = 0.5, vjust = 1.5)
+
+labeled2
+```
+
 # Executive Summary
 
 ![Diagram illustrating the experimental workflow and deployment pipeline. Each step is annotated with the corresponding Python script used, enabling full reproducibility of the process.](schematic.png)
@@ -101,6 +210,8 @@ The machine learning models are slightly less robust to blur. As blur increases,
 Therefore in the case of image quality concerns, the PCA transformed XGBoost model will give the best result, otherwise ResNet50 will outperform all other models when image quality is high.
 
 ## Class Breakdown
+
+
 
 {FIG 4: CONFUSION MATRICES FOR 0 AUG TO FULL AUG}
 Why do deep learning models default to immune and stromal?
