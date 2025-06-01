@@ -36,15 +36,14 @@ metrics <- read_csv("../metrics/combined_report_metrics.csv")
 
 # Executive Summary
 
-Computer vision models are increasingly used in pathology, often achieving performances comparable to expert clinicians. However, these models are typically trained on high-quality images that are costly to produce, while real-world clinical data is often lower in quality. This study evaluates model performance under varying levels of image degradation to identify architectures that are more robust to realistic, lower quality inputs and inform clinical expectations and decisions in practice.   
+Automated image classification using computer vision has become an increasingly valuable tool in medical pathology to detect and classify cells within tissue samples, with some models achieving comparable performance to expert clinicians. However, these models are trained on high-resolution images that are costly to produce. In practice, histopathology images often suffer from loss of quality due to scanner blur, staining variability, or noise, such as when using Whole Slide Imaging (WSI). This study investigates how such degradations affect classification performance to identify robust architectures that best support clinical decision making. 
 
-The impact of focus-related artefacts in Whole Slide Imaging (WSI)—specifically blur and noise—on the classification of breast tissue cells was the focus of this experiment. To simulate the low-quality test data often encountered in clinical settings, Gaussian blur and noise were applied to images during testing. Four models were evaluated: ResNet50 (pretrained on ImageNet), a custom CNN, Random Forest, and XGBoost. Deep learning models used normalised inputs to learn local features, while machine learning models applied PCA to capture global patterns.   
+To simulate lower-quality image data, Gaussian blur and noise were applied to Xenium Analyser-derived images during testing. We evaluated four models: ResNet50 (pretrained on ImageNet), a custom convolutional neural network (CNN), Random Forest, and XGBoost. The deep learning models processed raw image data to learn hierarchical spatial features, while traditional machine learning models relied on dimensionality-reduced input, with principal component analysis (PCA) selected over histogram of gradient (HOG) features after initial experimentation, to capture broader structure.
+The classification task involved identifying four cell types found in Eosin (H&E)-stained cancerous breast tissue: Tumour, Immune, Stromal, and Other. While all models showed a decline in performance as image quality decreased, machine learning models maintained relatively high performance, with negligible accuracy loss under added noise and only around a 10% decrease under severe blur. Notably, these models consistently detected over 80% of tumour cells across degradation levels, suggesting potential as screening tools in lower-quality imaging environments.
 
-All models experienced decreased performance with image degradation, however machine learning models were the most robust. They showed negligible drops with noise and only ~10% accuracy loss at extreme blur levels. Notably, both consistently detected >80% of tumours and kept a relatively high precision for immune cells, showing potential for utility as screening tools even if overall accuracy drops.. On the other hand, deep learning models, while initially the most accurate, deteriorated rapidly with augmentation—often defaulting to one or two classes.   
+In contrast, deep learning models, while achieving over 70% overall accuracy on high-quality images, were more sensitive to image degradation. Their performance declined sharply under blur and noise, often defaulting to one or two dominant classes. These results highlight the need to align choice of model with expected input quality.
 
-ResNet50 remained optimal on high-quality data (≥70% accuracy), but XGBoost demonstrated the best performance under degraded conditions, with stable accuracy and high recall for tumour cells. These results highlight the need to match model choice to the expected quality of clinical input data.   
-
-To support clinical interpretation, a Shiny application was developed to visualise the effects of image degradation and model performance at each augmentation level, both overall and by class. The app also enables pathologists to upload their own images and observe model predictions across varying levels of degradation, providing insights into prediction stability, and the most appropriate model for their image quality.   
+To help clinicians choose the most suitable model for image quality issues they may encounter, a Shiny app was developed to visualise how image degradation affects performance, including per-class, confidence, and stability. Users can upload their own images to enable an informed decision.  
 
 The experiment was designed for full reproducibility. All code and implementation instructions are available at [https://github.com/AlanS812/data3888-14](https://github.com/AlanS812/data3888-14). @fig-schematic outlines the experimental workflow, with corresponding Python scripts indicated for clarity and ease of use.
 
@@ -52,13 +51,12 @@ The experiment was designed for full reproducibility. All code and implementatio
 
 # Background
 
-The medical field is increasingly turning to Computer Vision models for classification tasks, often distinguishing cell types. With rapid increases in the field, models have come to accuracies of up to 98.5% [@aftab2025], slightly above that of an experienced human pathologist [@christiansen2025]. The question becomes, can these models maintain their performance in day-to-day practice? In real life, cell images do not always have perfect quality. Investigating how drops in image quality impact classification performance will give medical imagers a better view of how these models will perform on real data.   
+Computer Vision models are being increasingly used to differentiate cell types in histopathology slides. With advancements in the field, some models have achieved classification accuracies as high as 98.5%[@aftab2025], exceeding the performance of experienced human pathologists [@christiansen2025]. However, a key concern remains: can these models maintain their performance when applied to typical clinical image data, which often varies in quality due to limitations in digital scanning and inconsistencies in slide preparation?   
 
-To address this issue, it is first necessary to determine the common causes and kinds of image degradation. These vary greatly depending on the situation, for example, motion blur is a typical challenge for MRIs [@luo2008]. This report, however, centers on histological H&E stained tissue slides, specifically of breast cancer tissue [@janesick2023]. The major cause of quality issues in this case is ‘Whole Slide Imaging’ or WSI causing blur and noise. [@lopez2013]   
+Although the cause of image degradation can vary widely, such as motion blur typical of MRIs [@luo2008], this study is concerned with Whole Slide Imaging (WSI). WSI is a common technique of scanning and digitising full microscope slides, as opposed to in sections [@lopez2013]. Though it greatly reduces processing time, it often introduces unintentional image degradations such as blur and noise, especially when focal points are misaligned due to the 3D nature of the tissue [@shakhawat2020, @lopez2013]. If a selected focal point is not representative of the slide’s variation in depth, surrounding areas may appear out of focus, reducing image clarity and obscuring high-frequency structural information such as texture and edges [@shakhawat2020].   
 
-WSI is the common practice of scanning full microscope slides, rather than scanning section by section. [@lopez2013] It has reduced the processing time of a single slide to mere minutes, but there are trade-offs in image quality. Focal points are the points where the camera centers its focus, they are selected automatically or manually. As microscope slides are three-dimensional, if a focus point is selected on a region with different depth to the typical focus depth of the slide, its neighbouring areas will be out of focus. This will lead to blur issues, and more prominent noise due to the camera’s failure to fully capture high frequency information like texture and edges. [@shakhawat2020]   
-
-There are ways to mitigate image quality drops: increasing the number of focal points will reduce the prominence of the issue, but not eradicate it entirely. Further, this will also increase processing time, inconveniencing patients and adding delays on overloaded labs. [@lopez2013] Imaging technology is advancing quickly, but with their prohibitive expense, the issue is likely to persist. Therefore, giving clinicians information on how this will impact their models, and what architectures are better suited to lower image quality is crucial to the success of medical image classification.   
+Although increasing the number of focal points may somewhat mitigate the issue, it also increases processing time, inconveniencing patients and adding delays on overloaded labs [@lopez2013]. Despite imaging technology advancing quickly, the associated expense means image quality issues are likely to persist. Therefore, understanding how reductions in image quality impact a model's classification ability is vital for medical imagers and other clinicians, particularly in the context of cancer diagnosis, such as the breast cancer context of the current study [@janesick2023].
+  
 
 # Method
 ::: {.panel-tabset}
@@ -71,27 +69,23 @@ Images were grouped into classes based on their role in breast cancer progressio
 
 ## Pre-Processing
 
-Each class was randomly and equally sampled to ensure the model learns from all biologically important categories, not just those most prevalent in the provided tissue. In real tissue, critical cells like tumour or immune types may be rare, so underrepresenting them could potentially weaken the model’s diagnostic ability. Unlabelled cell images were excluded to ensure consistent truth labels and avoid introducing noise into the training process.  
+Each class was randomly and equally sampled to ensure the model learns from all biologically important categories, not just those most prevalent in the provided tissue. In real tissue, critical cells like Tumour or Immune types may be rare, so underrepresenting them could potentially weaken the model’s diagnostic ability. Unlabelled cell images were excluded to ensure consistent truth labels and avoid introducing noise into the training process.
 
-To balance model performance with computational constraints, 20,000 of the given ~175,000 images were used, with 75% for training, 10% for validation, and 15% for testing. 3 test sets were used Although a typical data split allocates 80% for training, 10% for validation, and 10% for testing, the test set was increased to enhance the reliability of the final evaluation metrics. Three separate test sets were used with metrics averaged to assess model stability. This approach provides greater insight into variability across test sets, offering medical professionals a clearer understanding of model reliability in practice.Due to natural variation in cell size, cropped images were not uniform, and were therefore resized to 224×224 pixels using Lanczos downsampling (Duchon 1979)[@duchon1979] to meet ResNet50’s input requirements.   
+To balance model performance with computational constraints, 20,000 of the given ~175,000 images were used, with 42% for training, 8% for validation, and 50% for testing. Although a typical data split allocates 80% for training, 10% for validation, and 10% for testing, the test set size was increased due to the high stakes nature of tumour cell classification, and thus the need for certainty in how a model will perform. Three separate test sets were used to ensure results were reproduced consistently. Due to natural variation in cell size, cropped images were not uniform, and were therefore resized to 224×224 pixels using Lanczos downsampling (Duchon 1979)[@duchon1979] to meet ResNet50’s input requirements.   
 
-## Model Development
+## Model Development 
 
-To assess the impact of reduced image quality on classification performance, two classical machine learning models and two deep learning models were trained to compare their robustness and find if one had an advantage over the other.   
+To compare the robustness of different modelling approaches to image degradation, we trained two deep learning models and two classical machine learning models. Models were also selected for their suitability to high-dimensional medical image data. CNNs and ImageNet-pretrained ResNet50 were included for their ability to extract spatial features directly from pixel data, while Random Forest and XGBoost were selected for their robustness to high-dimensional, potentially redundant features, particularly when paired with dimensionality reduction techniques like HOG and PCA. All four have demonstrated success in medical image classification in previous studies [@shi2022; @xu2023; @sarica2017; @yadav2019].
 
-The selected models were chosen based on their compatibility with high-dimensional medical image data. CNNs and Imagenet trained ResNet were used for their ability to extract spatial features directly from pixel data, while Random Forest and XGBoost were selected for their robustness to high-dimensional, potentially redundant features, particularly when using HOG and PCA to make the feature space more compact and informative. All 4 have had particular success in medical image classification in previous studies [@shi2022; @xu2023; @sarica2017; @yadav2019]. Models such as SVM and k-NN were avoided due to their difficulty with increased data scale and sensitivity to the high dimensional nature of image-based classification tasks.   
+Deep learning models were trained on pixel inputs normalised using ImageNet parameters to ensure comparability of results. For the machine learning models, three input formats were tested: raw pixels, HOG, and PCA [@muldrova] Raw pixel input proved too computationally expensive, and HOG underperformed, likely due to its loss of colour and brightness (intensity) details crucial in stained histology images. 
 
-Images were normalised with ImageNet parameters for both deep learning models to ensure comparability between results. For machine learning models, three methods of input were tested: raw pixels, Histogram of Gradients (HOG) and Principal Component Analysis (PCA). [@muldrova] Raw pixels were too computationally expensive to scale, and HOG had poor results, likely due to the loss of intensity and colour information which is vital in stained images.   
-
-PCA gave the best performance while minimising space, converting 50,000 pixels to 100 components and accounting for ~60% of variance in the dataset, see @fig-appendix-pca in appendix for details. Images were flattened, then the principal components (PC) were fit to the training dataset. Testing images were linearly transformed with the pre-fit PC, not refit to the testing data to avoid data leakage. Each principal component can be visualised as a 224x224 image with some global feature and transformed images will give insight into how the model decides, allowing for better interpretability, vital for high-stakes medical decisions. 
+Compared to HOG, PCA improved base model performance and produced a more compact feature space. Each 224x224 image (~50,000 pixels) was flattened and reduced to 100 principal components, capturing ~60% of dataset variance. PCA was fit on training data only, and test images were transformed using the same components to avoid data leakage. These components can be visualised as image-like patterns that reflect global structure, aiding in interpretability, a crucial consideration in clinical settings.
 
 ## Evaluation
 
-Models were tested using the same testing set at different augmentation levels and combinations of Gaussian blur and noise to simulate WSI damage [@shakhawat2020]. Initially both were tested at small increments, which were increased once a pattern emerged to manage computation. Blur was tested on kernel sizes from 0 to 19, and noise from 0 to 30, this provided a full range of high quality to completely degraded images.   
-
-To evaluate overall performance, metrics of accuracy, confusion matrices, average maximum confidence and weighted F1, precision, recall scores were taken. For a per class breakdown, metrics of precision, recall, f1, average confidence and standard deviation and prediction count were taken.   
-
-
+Models were evaluated on a shared test set across varying levels of Gaussian blur and noise.
+Initially, small increments of noise and blur were used, then adjusted to larger intervals once performance patterns emerged to reduce computation. Blur was applied using Gaussian kernels from size 0 to 19, and noise ranged from 0 to 30, covering the full range from high-quality to heavily degraded images.
+Overall performance was measured using accuracy, weighted F1, precision, recall, and average maximum confidence. Class-level metrics included per-class precision, recall, F1, and average confidence, providing insight into both prediction reliability and stability under degradation.
 :::
 
 # Results
@@ -128,9 +122,9 @@ print(ggplot(blur_plot_data, aes(x = blur_size, y = accuracy, color = noise_leve
 ```
 
 
-As shown in @fig-blur-accuracy, deep learning models perform best on unaugmented images, but accuracy drops sharply with any augmentation—except for precision. In contrast, the machine learning models maintain relatively stable accuracy, F1, and weighted recall across augmentation levels, and mostly stable precision.   
+As shown in @fig-blur-accuracy, deep learning models achieved higher accuracy on unaltered images, but their performance dropped sharply with any form of degradation. In contrast, both machine learning models maintained relatively stable accuracy, weighted F1, recall, and precision across degradation levels. 
 
-Precision in deep learning exceptionally stays stable up to high levels of blur provided no noise is applied. Once noise is applied, only immune and stromal are predicted. When blur is applied, it predicts ‘other’ and ‘tumour’ extremely rarely, artificially inflating the average precision.   
+Interestingly, deep learning models preserved high average precision even under heavy blur, but only when no noise was applied. Once any noise was introduced, they predominantly predicted the Immune and Stromal classes. Because Other and Tumour were almost never predicted, the average precision was artificially inflated. This limitation is explored further in the ‘Class Breakdown’ section. 
 
 
 ### Deep Learning
@@ -139,20 +133,20 @@ Noise causes the sharpest drop in accuracy for the CNN and ResNet50 models, with
 
 Blur also caused a rapid performance drop, especially beyond kernel sizes of 9 pixels—though less severe than noise. This result is not unsurprising as even to the human eye, this level of blurring appears to be significant. This is consistent with the performance seen above with Gaussian noise applied, however to a less extreme extent as neighbouring pixels are not being altered using the same normally random distribution, rather as a function of their neighbouring colour channels. As a result the impact of blurring is less intense at low levels than noise, with only minor performance decreases.  
 
-Several other studies have similar findings, showing that models trained using sharp images struggle to generalise with images that have been blurred. Jang & Tong (2021) [@jang2021] interestingly tested the effects of training CNNs using blurred images originally, then sharp images later and found that these models consistently performed better than those that were trained using only sharp images (as we have done in our investigation).   
+Similar trends have been reported in other studies, where models trained on sharp images struggled to generalise to blurred inputs[@jang2021]
 
 ### Machine Learning
 
 ![Original and augmented images reconstructed after PCA dimension reduction, generated in pca.py.](reconstruction_comparison.png){#fig-pca width=60%}
 
-On the other hand, although starting at lower accuracies the machine learning models are more robust to drops in quality. Both models have limited drops with a blur kernel size of up to 5 and hardly any impact from noise levels of up to 30.    
+On the other hand, although starting with lower initial accuracy, the machine learning models demonstrated greater robustness to image degradation. Both Random Forest and XGBoost showed minimal performance drops with blur kernel sizes up to 5 and were largely unaffected by noise levels up to 30.  
 
-The robustness of these models is most likely due to the Principal Component dimension reduction. This makes intuitive sense once visualised in @fig-pca, it is clear that once the principal component transformation has been applied, the  images appear blurred, and effectively lose their noise. As the Principal Components (PCs) are global - capturing the whole image, noise will simply be discarded. Comparatively, a CNN based model will examine local patterns which can be distorted by localised noise. Notably, PCA is often used as a denoising technique [@bakir2004], which explains its robustness to noise in classification tasks.   
+The robustness of these models is most likely due to the use of PCA. Upon visual inspection of @fig-pca, it is clear that applying PCA transforms images into a lower-dimensional representation that appears visually blurred and less noisy. Because PCA captures global patterns across the entire image, it effectively filters out small-scale noise. Comparatively, CNN will examine local patterns which could potentially be distorted by localised noise. In fact, PCA is commonly used as a denoising technique [20], which helps explain its contribution to model stability under degradation.  
 
-The machine learning models are slightly less robust to blur. As blur increases, the linear transformation can detect less information. However, even at extreme levels where it is uninterpretable to the human eye, the model can still extract colour, spatial and intensity information. Again, due to its global nature it is able to capture larger scale features, so it can continue extracting relevant patterns even with limited local information.  
+The machine learning models are slightly less robust to blur. As blur increases, the linear transformation can detect less structural information. However, even at extreme levels where it is uninterpretable to the human eye, the model can still extract colour, spatial and intensity information. Again, due to its global nature it is able to capture larger scale features, so it can continue extracting relevant patterns even with limited local information.  
 
-Thus, XGBoost with PCA is best for low-quality data; ResNet50 performs best on high-quality inputs.  
-
+Therefore, while ResNet50 has the best classification performance with no augmentations, once image quality drops a simpler model like XGBoost may be more reliable.  
+ 
 
 ## Class Breakdown
 
@@ -275,11 +269,11 @@ Page 3 allows users to upload an image and view predictions across all augmentat
 
 # Conclusion
 
-Accurate identification of cell types in histological breast tissue is essential for effective, early cancer diagnosis and treatment planning. However, real-world slides often suffer from quality issues, such as the blur and noise introduced by WSI, a critical consideration when needing to detect the presence of critical classes like tumour cells.   
+Accurate identification of cell types in histological breast tissue is essential for effective, early cancer diagnosis and treatment planning. However, real-world slides often suffer from quality issues, such as the blur and noise introduced by WSI, a critical consideration when needing to detect the presence of critical classes like Tumour cells. 
 
-This study evaluated four classification models across varying levels of image degradation, simulated with blur and noise. They were tested on a four-class problem, distinguishing breast tissue cells based on their function in cancer. It was found that image quality had a considerable effect on both machine and deep learning model performance. While our ResNet had the best performance on unaugmented images, PCA based machine learning models achieved stable and predictable performances even under severe image quality degradation. This suggests the potential for use of simpler machine learning models in instances where histological images have low quality, but the importance of correct cell type identification remains high.    
+This study evaluated four classification models across varying levels of image degradation, simulated with blur and noise. They were tested on a four-class problem, distinguishing breast tissue cells based on their function in cancer. It was found that image quality had a considerable effect on both machine and deep learning model performance. While our ResNet50 had the best performance on unaugmented images, PCA based machine learning models achieved stable and predictable performances even under severe image quality degradation. This suggests the potential for use of simpler machine learning models in instances where histological images have low quality, but the importance of correct cell type identification remains high. 
 
-This exploration underscores the importance of aligning the choice of model with the expected image quality in real-world workflows of pathologists and histology-based diagnosticians. To support this, an interactive Shiny application was developed to visualise how models react to different levels of image quality, so that medical professionals can make an informed choice of model based on their image quality and diagnostic priorities.
+This exploration underscores the importance of aligning the choice of model with the expected image quality in real-world workflows of pathologists and histology-based diagnosticians. To support this, an interactive Shiny application was developed to visualise how models react to different levels of image quality, so that medical professionals can make an informed choice of model based on their image quality and diagnostic priorities.   
 
 # Student Contribution
 
@@ -300,38 +294,4 @@ This exploration underscores the importance of aligning the choice of model with
 ## Page 3
 ![](app_pics/p3.png)
 
-## PCA Cumulative Variance
-
-```{r fig-appendix-pca, fig.cap="Cumulative variance against number of components plot to analyse PCA.", message=FALSE, warning=FALSE}
-# install.packages(c("reticulate","ggplot2"))  # if not already installed
-library(reticulate)
-library(ggplot2)
-
-# 1. Load joblib and your PCA model
-joblib <- import("joblib")
-pca    <- joblib$load("../app/Base_pca.joblib")
-
-# 2. Extract explained variance ratios and compute cumulative sum
-var_ratios <- pca$explained_variance_ratio_
-cumvar     <- cumsum(var_ratios)
-
-# 3. Prepare a data frame for plotting
-df <- data.frame(
-  Component = seq_along(cumvar),
-  CumulativeVariance = cumvar
-)
-
-# 4. Plot
-ggplot(df, aes(x = Component, y = CumulativeVariance)) +
-  geom_line(color = "steelblue", size = 1) +
-  geom_point(color = "darkred", size = 2) +
-  # only show every 50th component on the x-axis
-  scale_x_continuous(breaks = seq(0, max(df$Component), by = 50)) +
-  labs(
-    title = "PCA Cumulative Explained Variance",
-    x     = "Principal Component",
-    y     = "Cumulative Variance Explained"
-  ) +
-  theme_minimal()
-```
 
