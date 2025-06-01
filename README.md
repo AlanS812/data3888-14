@@ -9,7 +9,7 @@ Each model was evaluated on:
 - Robustness under increasing blur and noise augmentations
 - Confidence and class-level prediction stability
 
-For full methodology, experimental setup, and results, see the final ***[report link here].***
+For full methodology, experimental setup, and results, see the [report folder](report/).
 
 ## Dataset
 
@@ -32,7 +32,16 @@ This repo includes an evaluation pipeline for image classification models. The s
   - `combined_report_metrics.csv` (for the report)  
   - `combined_app_metrics.csv` (for the Shiny app)
 
-### To run the pipeline:
+## Getting Started
+
+To run the pipeline, app, or model training scripts, you must first download or clone the repository locally.
+
+```bash
+git clone https://github.com/AlanS812/data3888-14.git
+cd data3888-14
+```
+
+### To run the model evaluation pipeline:
 
 ```bash
 python3 evaluation/run_pipeline.py
@@ -67,3 +76,13 @@ This will use `resnet50_models/` to store intermediate outputs and save the fina
 python3 models/xgboost.py
 ```
 Model will be saved as `xgboost.json`
+
+## Running the Shiny App (Python Shiny)
+
+```bash
+cd app
+shiny run --reload app.py
+# or
+python -m shiny run --reload app.py
+```
+Once running, the app will provide a local link like http://127.0.0.1:8000 — open that in your browser to explore the dashboard.
