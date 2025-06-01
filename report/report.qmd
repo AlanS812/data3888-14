@@ -143,7 +143,7 @@ Several other studies have similar findings, showing that models trained using s
 
 ### Machine Learning
 
-![Original and augmented images reconstructed after PCA dimension reductio, processed in pca.py.](reconstruction_comparison.png){#fig-pca fig.height=8}
+![Original and augmented images reconstructed after PCA dimension reductio, processed in pca.py.](reconstruction_comparison.png){#fig-pca width=60%}
 
 On the other hand, although starting at lower accuracies the machine learning models are more robust to drops in quality. Both models have limited drops with a blur kernel size of up to 5 and hardly any impact from noise levels of up to 30.    
 
@@ -257,23 +257,21 @@ The experiment was designed for full reproducibility. All code and implementatio
 
 # Application Development
 
+![Shiny application pages 1 to 3, larger pictures can be found in the appendix](app_pics/overview.png)
+
 The application is designed to complement the real-world workflows of medical imaging professionals and diagnosticians, where visual assessment is central. By pairing augmented images with model performance metrics, it bridges the gap between human judgement and machine classification, supporting interdisciplinary decision-making.
 
 The backend integrates two key pipelines: a pre-computed (but dynamically updatable) metrics pipeline, and pre-trained models that allow new predictions from user-uploaded images.
 
 Page 1 displays example cell images from each class under user-selected blur and noise levels, alongside graphical performance summaries to allow quick model comparison under the augmentations applied.
 
-![](app_pics/p1_1.png)
-![](app_pics/p1_2.png)
-
 Page 2 provides per-model class-level performance, including confidence and confusion matrices, supporting evaluation of model reliability and cell-type-specific performance as required.
 
-![](app_pics/p2_1.png)
-![](app_pics/p2_2.png)
+
 
 Page 3 allows users to upload an image and view predictions across all augmentation combinations, helping assess model behaviour under novel, real-world image conditions.ns.
 
-![](app_pics/p3.png)
+
 
 # Discussion and Limitations
 
@@ -300,3 +298,19 @@ This exploration underscores the importance of aligning the choice of model with
 # Student Contribution
 
 **Elise** wrote the shiny app script, deployed a reproducibility pipeline, trained and evaluated RF, researched cell groupings. **Emily** trained XGBoost, wrote the evaluation file for Resnet, CNN, XGBoost, wrote helper files/functions for shiny, made the presentation slides and schematic. **Elise and Emily** collated previous research and wrote report and speech drafts, then edited and formatted into QMD. **Jason** wrote the processing file, trained ResNet, wrote the initial methodology and results drafts and assisted with some observations. **Alan** trained the CNN, made initial presentation slides and did research on methodology. **Barry** did research on background and a few other methodology areas. **Ye** trained initial KNN and CNN models
+
+# Appendix
+
+## Shiny App
+
+### Page 1
+![](app_pics/p1_1.png)
+![](app_pics/p1_2.png)
+
+## Page 2
+![](app_pics/p2_1.png)
+![](app_pics/p2_2.png)
+
+## Page 3
+![](app_pics/p3.png)
+
