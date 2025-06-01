@@ -67,7 +67,7 @@ def train_and_evaluate_xgboostPCA(folder='original', n_components=100, save_pca=
     X_train_flat = Xmat_train.reshape(Xmat_train.shape[0], -1)
     X_val_flat = Xmat_val.reshape(Xmat_val.shape[0], -1)
 
-    pca_path = f'../app/Base_pca.joblib'
+    pca_path = 'Base_pca.joblib'
     if load_pca and os.path.exists(pca_path):
         pca = joblib.load(pca_path)
     else:
